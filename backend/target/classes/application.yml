@@ -1,0 +1,48 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/ebank
+    username: ebankuser
+    password: ebankpass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  redis:
+    host: ebank-redis
+    port: 6379
+    timeout: 5000
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+app:
+  jwt:
+    secret: "0bCXTcIZ+kQx5A3oeueprLfcbBT7pDWxg3oJU+CWn1NFXwftUT+MMFnoS/XO3/2z3yR2KfXqYQ9mqzz7PWhL1w=="
+    access-expiration-in-ms: 3600000
+    refresh-expiration-in-ms: 86400000
+    issuer: eBank-API
+
+logging:
+  level:
+    org:
+      hibernate: WARN
+      springframework:
+        security: DEBUG
+        web: DEBUG
+        cache: TRACE
+    com:
+      ebank: DEBUG
+    org.springdoc: DEBUG
+
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    url: /v3/api-docs
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
