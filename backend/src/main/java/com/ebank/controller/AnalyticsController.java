@@ -19,15 +19,15 @@ public class AnalyticsController {
     @Operation(summary = "Get spending breakdown by transaction type")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved breakdown of spending grouped by transaction type")
     @GetMapping("/spending")
-    public Map<String, Object> getSpendingBreakdown() {
-        return analyticsService.getSpendingBreakdown();
+    public Map<String, Object> getSpendingBreakdown(@RequestParam String accountNumber) {
+        return analyticsService.getSpendingBreakdown(accountNumber);
     }
 
     @Operation(summary = "Get monthly spending trends")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved total spending per month")
     @GetMapping("/monthly")
-    public Map<String, Object> getMonthlyTrends() {
-        return analyticsService.getMonthlyTrends();
+    public Map<String, Object> getMonthlyTrends(@RequestParam String accountNumber) {
+        return analyticsService.getMonthlyTrends(accountNumber);
     }
 
 }

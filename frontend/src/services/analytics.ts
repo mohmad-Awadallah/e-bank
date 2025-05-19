@@ -13,24 +13,16 @@ export interface MonthlyTrendsData {
   values: number[];
 }
 
-// جلب بيانات تحليل الإنفاق
-export const getSpendingData = async (): Promise<SpendingData> => {
-  try {
-    const response = await apiClient.get('/analytics/spending');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching spending data:', error);
-    throw new Error('Failed to fetch spending data');
-  }
+export const getSpendingData = async (accountNumber: string): Promise<SpendingData> => {
+  const response = await apiClient.get('/analytics/spending', {
+    params: { accountNumber }
+  });
+  return response.data;
 };
 
-// جلب بيانات الاتجاهات الشهرية
-export const getMonthlyTrendsData = async (): Promise<MonthlyTrendsData> => {
-  try {
-    const response = await apiClient.get('/analytics/monthly');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching monthly trends data:', error);
-    throw new Error('Failed to fetch monthly trends data');
-  }
+export const getMonthlyTrendsData = async (accountNumber: string): Promise<MonthlyTrendsData> => {
+  const response = await apiClient.get('/analytics/monthly', {
+    params: { accountNumber }
+  });
+  return response.data;
 };

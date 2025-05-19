@@ -15,7 +15,6 @@ export type Transaction = {
   displayAmount: string;
   formattedDate: string;
   category: string;
-  isCredit: boolean;
 };
 
 type Props = {
@@ -36,6 +35,12 @@ const getIcon = (category: string) => {
   }
 };
 
+// تحديد ما إذا كانت العملية Credit أم لا
+const isCreditTransaction = (category: string): boolean => {
+  const creditTypes = ['deposit', 'reversal', 'refund'];
+  return creditTypes.includes(category.toLowerCase());
+};
+
 export function RecentTransactions({ transactions }: Props) {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm">
@@ -50,29 +55,33 @@ export function RecentTransactions({ transactions }: Props) {
       </div>
 
       <div className="space-y-4">
-        {transactions.map(tx => (
-          <div key={tx.id} className="flex justify-between items-center border-b last:border-0 pb-3">
-            <div className="flex items-center gap-3">
-              {getIcon(tx.category)}
-              <div>
-                <p className="font-medium">{tx.title}</p>
-                <p className="text-sm text-gray-500">
-                  {tx.formattedDate} • {tx.category}
+        {transactions.map(tx => {
+          const isCredit = isCreditTransaction(tx.category);
+
+          return (
+            <div key={tx.id} className="flex justify-between items-center border-b last:border-0 pb-3">
+              <div className="flex items-center gap-3">
+                {getIcon(tx.category)}
+                <div>
+                  <p className="font-medium">{tx.title}</p>
+                  <p className="text-sm text-gray-500">
+                    {tx.formattedDate} • {tx.category}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isCredit ? (
+                  <ArrowDownCircle className="text-green-500 w-5 h-5" />
+                ) : (
+                  <ArrowUpCircle className="text-red-500 w-5 h-5" />
+                )}
+                <p className={`font-semibold ${isCredit ? 'text-green-600' : 'text-red-600'}`}>
+                  {tx.displayAmount}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {tx.isCredit ? (
-                <ArrowDownCircle className="text-green-500 w-5 h-5" />
-              ) : (
-                <ArrowUpCircle className="text-red-500 w-5 h-5" />
-              )}
-              <p className={`font-semibold ${tx.isCredit ? 'text-green-600' : 'text-red-600'}`}>
-                {tx.displayAmount}
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

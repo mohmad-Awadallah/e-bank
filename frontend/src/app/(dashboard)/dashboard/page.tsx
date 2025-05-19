@@ -74,33 +74,39 @@ export default function DashboardHome() {
 
   if (!isAuthenticated || loading) return <LoadingScreen />;
 
+  // Find the selected account's balance
+  const selectedAccountObj = accounts.find(acc => acc.accountNumber === selectedAccount);
+  const balance = selectedAccountObj ? selectedAccountObj.balance : 0;
+
   return (
     <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       <header className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Welcome back, {user?.firstName}!</h1>
       </header>
 
-      {/* Account selector */}
       {accounts.length > 1 && (
-        <div>
-          <label htmlFor="account-select" className="mr-2 font-medium">Select Account:</label>
-          <select
-            id="account-select"
-            className="border rounded p-1"
-            value={selectedAccount || undefined}
-            onChange={e => setSelectedAccount(e.target.value)}
-          >
-            {accounts.map(acc => (
-              <option key={acc.accountNumber} value={acc.accountNumber}>
-                {acc.accountNumber}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+  <div>
+    <label htmlFor="account-select" className="mr-2 font-medium">Select Account:</label>
+    <select
+      id="account-select"
+      className="border rounded p-1"
+      value={selectedAccount || undefined}
+      onChange={e => setSelectedAccount(e.target.value)}
+    >
+      {accounts.map(acc => (
+        <option key={acc.accountNumber} value={acc.accountNumber}>
+          {acc.accountNumber}
+        </option>
+      ))}
+    </select>
+    <p className="text-base font-bold text-gray-700">
+      Balance: ${balance.toFixed(2)}
+    </p>
+  </div>
+)}
 
       <RecentTransactions transactions={transactions} />
-      <AnalyticsSection />
+      <AnalyticsSection accountNumber={selectedAccount ?? ''} />
     </main>
   );
 }

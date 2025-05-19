@@ -6,14 +6,9 @@ import React, {
     useState,
     ReactNode,
 } from 'react';
-import { api } from '../services/apiService';
+import { api, User } from '../services/apiService';
 
-interface User {
-    userId: string;
-    firstName: string;
-    lastName: string;
-    role?: string;
-}
+
 
 interface AuthContextType {
     isAuthenticated: boolean;

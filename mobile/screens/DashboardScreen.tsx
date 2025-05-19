@@ -1,281 +1,212 @@
 // screens/DashboardScreen.tsx
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-  Dimensions,
-  TouchableOpacity,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, ScrollView, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { LineChart, PieChart } from 'react-native-chart-kit';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Toast from 'react-native-toast-message';
-import {
-  ArrowDownCircle,
-  ArrowUpCircle,
-  Banknote,
-  CreditCard,
-  Wallet,
-  Activity as ActivityIcon,
-} from 'lucide-react-native';
-import { PieChart, LineChart } from 'react-native-chart-kit';
-import { api, mapApiTransactions, TransactionDisplay, Account } from '../services/apiService';
-import { useAuth } from '../contexts/AuthContext';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { api, Account, ApiTransaction, SpendingData, MonthlyTrendsData, TransactionDisplay, User } from '../services/apiService';
+import { Banknote, CreditCard, Wallet, Activity as ActivityIcon, ArrowDownCircle, ArrowUpCircle } from 'lucide-react-native';
 
-// ------------------------- RecentTransactions Component -------------------------
-function RecentTransactions({ transactions }: { transactions: TransactionDisplay[] }) {
-  const navigation = useNavigation<NativeStackNavigationProp<{ Transactions: undefined }>>();
+// تعريف أسماء الشاشات
+export type RootDrawerParamList = {
+  Dashboard: undefined;
+  Transactions: undefined;
+  // أضف شاشات أخرى إن وجدت
+};
 
-  const getIcon = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'transfer': return <Banknote color="#6B7280" size={20} />;
-      case 'payment':  return <CreditCard color="#6B7280" size={20} />;
-      case 'deposit':  return <Wallet color="#6B7280" size={20} />;
-      default:         return <ActivityIcon color="#6B7280" size={20} />;
-    }
-  };
+const screenWidth = Dimensions.get('window').width - 32;
 
-  return (
-    <View className="bg-white p-6 rounded-xl shadow-sm mb-8">
-      <View className="flex-row justify-between items-center mb-4">
-        <View className="flex-row items-center gap-2">
-          <ActivityIcon color="#2563eb" size={24} />
-          <Text className="text-xl font-semibold text-gray-800">Recent Transactions</Text>
-        </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Transactions')}>
-          <Text className="text-blue-600">View All</Text>
-        </TouchableOpacity>
-      </View>
+const chartConfig = {
+  backgroundGradientFrom: '#fff',
+  backgroundGradientTo: '#fff',
+  color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+  strokeWidth: 2,
+  decimalPlaces: 0,
+};
 
-      <View>
-        {transactions.length === 0 ? (
-          <Text className="text-gray-500">No recent transactions.</Text>
-        ) : (
-          transactions.map(item => {
-            // Determine positive (credit) vs negative (debit) by displayAmount sign
-            const isPositive = item.displayAmount.trim().startsWith('+');
-            return (
-              <View
-                key={item.id}
-                className="flex-row justify-between items-center border-b last:border-0 py-3"
-              >
-                <View className="flex-row items-center gap-3">
-                  {getIcon(item.category)}
-                  <View>
-                    <Text className="font-semibold text-gray-800">{item.title}</Text>
-                    <Text className="text-sm text-gray-500">
-                      {item.formattedDate} • {item.category}
-                    </Text>
-                  </View>
-                </View>
+const getIcon = (category: string) => {
+  switch (category.toLowerCase()) {
+    case 'transfer': return <Banknote size={20} color="#6B7280" />;
+    case 'payment': return <CreditCard size={20} color="#6B7280" />;
+    case 'deposit': return <Wallet size={20} color="#6B7280" />;
+    default: return <ActivityIcon size={20} color="#6B7280" />;
+  }
+};
 
-                <View className="flex-row items-center gap-2">
-                  {isPositive ? (
-                    <ArrowDownCircle color="#10B981" size={20} />
-                  ) : (
-                    <ArrowUpCircle color="#EF4444" size={20} />
-                  )}
-                  <Text className={`font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                    {item.displayAmount}
-                  </Text>
-                </View>
-              </View>
-            );
-          })
-        )}
-      </View>
-    </View>
-  );
-}
-
-// ------------------------- DashboardScreen -------------------------
 export default function DashboardScreen() {
-  const { user } = useAuth();
+  // نوع التوجيه باستخدام DrawerNavigator
+  type NavigationProp = DrawerNavigationProp<RootDrawerParamList, 'Dashboard'>;
+  const navigation = useNavigation<NavigationProp>();
+
+  const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<string>('');
+  const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<TransactionDisplay[]>([]);
-  const [spendingData, setSpendingData] = useState<{ labels: string[]; values: number[] } | null>(null);
-  const [monthlyData, setMonthlyData] = useState<{ labels: string[]; values: number[] } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const screenWidth = Dimensions.get('window').width - 32;
-
-  const initializeDashboard = useCallback(
-    async (signal: AbortSignal) => {
-      try {
-        if (!user) return;
-        setLoading(true);
-        setError(null);
-
-        const accRes = await api.getUserAccounts(user.id, { signal });
-        const fetched = Array.isArray(accRes.data) ? accRes.data : [];
-        setAccounts(fetched);
-
-        const firstAcc = fetched[0]?.accountNumber;
-        if (!firstAcc) {
-          setLoading(false);
-          return;
-        }
-        setSelectedAccount(firstAcc);
-      } catch (err: any) {
-        const msg = err.response?.data?.message || err.message || 'Failed to load data';
-        setError(msg);
-        Toast.show({ type: 'error', text1: 'Error', text2: msg });
-      } finally {
-        setLoading(false);
-      }
-    }, [user]
-  );
-
-  const fetchAccountData = useCallback(
-    async (accountNumber: string, signal: AbortSignal) => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [txRes, spendingRes, monthlyRes] = await Promise.all([
-          api.getRecentTransactions(accountNumber, 10, { signal }),
-          api.getSpendingData({ signal }),
-          api.getMonthlyTrendsData({ signal }),
-        ]);
-
-        const sanitize = (data: { labels: string[]; values: number[] }) => ({
-          labels: data.labels,
-          values: data.values.map(v => isNaN(Number(v)) ? 0 : Number(v)),
-        });
-
-        setTransactions(mapApiTransactions(txRes.data));
-        setSpendingData(spendingRes ? sanitize(spendingRes) : null);
-        setMonthlyData(monthlyRes ? sanitize(monthlyRes) : null);
-      } catch (err: any) {
-        const msg = err.response?.data?.message || err.message || 'Failed to load account data';
-        setError(msg);
-        Toast.show({ type: 'error', text1: 'Error', text2: msg });
-      } finally {
-        setLoading(false);
-      }
-    }, []
-  );
+  const [spending, setSpending] = useState<SpendingData | null>(null);
+  const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrendsData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const ctr = new AbortController();
-    initializeDashboard(ctr.signal);
-    return () => ctr.abort();
-  }, [initializeDashboard]);
+    const loadDashboardData = async () => {
+      try {
+        const userData = await api.getCurrentUser().then(res => res.data);
+        setUser(userData);
+
+        const accs = await api.getUserAccounts(userData.id.toString()).then(res => res.data);
+        setAccounts(accs);
+        if (accs.length > 0) {
+          setSelectedAccount(accs[0].accountNumber);
+          setBalance(accs[0].balance);
+        }
+
+        const spend = await api.getSpendingData(accs[0].accountNumber);
+        setSpending(spend);
+
+        const trends = await api.getMonthlyTrendsData(accs[0].accountNumber);
+        setMonthlyTrends(trends);
+
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
 
   useEffect(() => {
     if (!selectedAccount) return;
-    const ctr = new AbortController();
-    fetchAccountData(selectedAccount, ctr.signal);
-    return () => ctr.abort();
-  }, [selectedAccount, fetchAccountData]);
+
+    const loadAccountData = async () => {
+      try {
+        const tx = await api.getRecentTransactions(selectedAccount, 10).then(res => res.data);
+        const mappedTransactions = tx.map((t: ApiTransaction) => ({
+          id: t.id.toString(),
+          title: t.description,
+          category: t.type,
+          formattedDate: new Date(t.date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+          displayAmount: `${t.currency} ${Math.abs(t.amount).toFixed(2)}`,
+          amount: t.amount,
+          isCredit: ['deposit', 'reversal'].includes(t.type.toLowerCase()),
+        }));
+        setTransactions(mappedTransactions);
+
+        const spend = await api.getSpendingData(selectedAccount);
+        setSpending(spend);
+
+        const trends = await api.getMonthlyTrendsData(selectedAccount);
+        setMonthlyTrends(trends);
+
+        const selected = accounts.find(acc => acc.accountNumber === selectedAccount);
+        if (selected) setBalance(selected.balance);
+      } catch (error) {
+        console.error('Error loading account data:', error);
+      }
+    };
+
+    loadAccountData();
+  }, [selectedAccount, accounts]);
+
+  const renderTransaction = ({ item }: { item: TransactionDisplay }) => (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        {getIcon(item.category)}
+        <View>
+          <Text style={{ fontSize: 16, fontWeight: '500' }}>{item.title}</Text>
+          <Text style={{ fontSize: 12, color: '#6B7280' }}>
+            {item.formattedDate} • {item.category}
+          </Text>
+        </View>
+      </View>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {item.isCredit ? (
+          <ArrowDownCircle size={20} color="#10B981" />
+        ) : (
+          <ArrowUpCircle size={20} color="#EF4444" />
+        )}
+        <Text style={{ fontSize: 16, fontWeight: '600', color: item.isCredit ? '#16A34A' : '#DC2626' }}>
+          {item.displayAmount}
+        </Text>
+      </View>
+    </View>
+  );
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="mt-4 text-blue-600">Loading dashboard...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-red-500">{error}</Text>
-        <TouchableOpacity
-          className="mt-4 bg-blue-500 px-4 py-2 rounded"
-          onPress={() => initializeDashboard(new AbortController().signal)}
-        >
-          <Text className="text-white">Retry</Text>
-        </TouchableOpacity>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={{ marginTop: 8, color: '#6B7280' }}>Loading dashboard...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, backgroundColor: '#fff' }}>
-      <Text className="text-2xl font-bold text-blue-600 mb-4">
+    <ScrollView style={{ flex: 1, backgroundColor: '#F9FAFB', paddingHorizontal: 16, paddingTop: 24 }} contentContainerStyle={{ paddingBottom: 32 }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#2563EB', marginBottom: 16 }}>
         Welcome back, {user?.firstName || 'User'}!
       </Text>
 
-      {/* Account Picker */}
-      <View className="mb-6">
-        <Text className="text-lg font-medium text-gray-700 mb-2">Select Account:</Text>
-        <View className="bg-gray-100 rounded-md overflow-hidden">
-          <Picker
-            selectedValue={selectedAccount}
-            onValueChange={setSelectedAccount}
-          >
+      {/* Account Selector */}
+      <View style={{ backgroundColor: '#FFFFFF', padding: 16, borderRadius: 24, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 }}>
+        <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 8 }}>Select Account</Text>
+        <View style={{ borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
+          <Picker selectedValue={selectedAccount} onValueChange={setSelectedAccount}>
             {accounts.map(acc => (
-              <Picker.Item
-                key={acc.accountNumber}
-                label={`${acc.accountName} •••• ${acc.accountNumber.slice(-4)}`}
-                value={acc.accountNumber}
-              />
+              <Picker.Item key={acc.accountNumber} label={acc.accountNumber} value={acc.accountNumber} />
             ))}
           </Picker>
         </View>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: '#1F2937' }}>
+          Balance: ${balance.toFixed(2)}
+        </Text>
       </View>
 
       {/* Recent Transactions */}
-      <RecentTransactions transactions={transactions} />
+      <View style={{ backgroundColor: '#FFFFFF', padding: 24, borderRadius: 16, marginBottom: 32, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <ActivityIcon size={24} color="#2563EB" />
+            <Text style={{ fontSize: 20, fontWeight: '600', color: '#1F2937' }}>Recent Transactions</Text>
+          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Transactions')}>
+            <Text style={{ color: '#2563EB', fontWeight: '600' }}>View All</Text>
+          </TouchableOpacity>
+        </View>
+        <FlatList data={transactions} keyExtractor={item => item.id} renderItem={renderTransaction} />
+      </View>
 
-      {/* Analytics Charts */}
-      {spendingData && monthlyData && (
-        <View>
-          <Text className="text-xl font-semibold mb-4">Spending Breakdown</Text>
-          <PieChart
-            data={spendingData.labels.map((l, i) => ({
-              name: l,
-              population: spendingData.values[i],
-              color: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'][i % 4],
-              legendFontColor: '#4B5563',
-              legendFontSize: 12,
-            }))}
+      {/* Spending Breakdown */}
+      {spending && (
+        <View style={{ backgroundColor: '#FFFFFF', padding: 16, borderRadius: 24, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 16, color: '#1F2937' }}>Spending Breakdown</Text>
+          <PieChart data={spending.labels.map((label, index) => ({ name: label, amount: spending.values[index], color: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'][index % 4], legendFontColor: '#7F7F7F', legendFontSize: 12 }))}
             width={screenWidth}
             height={220}
-            chartConfig={{
-              backgroundGradientFrom: '#fff',
-              backgroundGradientTo: '#fff',
-              decimalPlaces: 0,
-              color: (op: number) => `rgba(0,0,0,${op})`,
-              labelColor: (op: number) => `rgba(75,85,99,${op})`,
-              propsForDots: { r: '3' },
-              style: { borderRadius: 12 },
-            }}
-            accessor="population"
+            chartConfig={chartConfig}
+            accessor="amount"
             backgroundColor="transparent"
             paddingLeft="15"
-            absolute
           />
-
-          <Text className="text-xl font-semibold mt-8 mb-4">Monthly Trends</Text>
-          {monthlyData.values.length > 1 ? (
-            <LineChart
-              data={{ labels: monthlyData.labels, datasets: [{ data: monthlyData.values }] }}
-              width={screenWidth}
-              height={220}
-              chartConfig={{
-                backgroundGradientFrom: '#fff',
-                backgroundGradientTo: '#fff',
-                decimalPlaces: 0,
-                color: (op: number) => `rgba(0,0,0,${op})`,
-                labelColor: (op: number) => `rgba(75,85,99,${op})`,
-                propsForDots: { r: '3' },
-                style: { borderRadius: 12 },
-              }}
-              bezier
-              style={{ borderRadius: 12 }}
-            />
-          ) : (
-            <Text className="text-gray-500 text-center">Insufficient data to display chart.</Text>
-          )}
         </View>
       )}
+
+      {/* Monthly Trends */}
+      <View style={{ backgroundColor: '#FFFFFF', padding: 16, borderRadius: 24, marginBottom: 32, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 }}>
+        <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 16, color: '#1F2937' }}>Monthly Trends</Text>
+        {monthlyTrends && monthlyTrends.values.length > 0 ? (
+          <LineChart data={{ labels: monthlyTrends.labels, datasets: [{ data: monthlyTrends.values }] }} width={screenWidth} height={220} chartConfig={chartConfig} bezier />
+        ) : (
+          <Text style={{ textAlign: 'center', color: '#6B7280' }}>Insufficient data to display chart.</Text>
+        )}
+      </View>
     </ScrollView>
   );
 }

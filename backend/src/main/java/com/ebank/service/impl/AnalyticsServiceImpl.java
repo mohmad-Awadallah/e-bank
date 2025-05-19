@@ -20,15 +20,17 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private final CacheService cacheService;
 
     @Override
-    public Map<String, Object> getSpendingBreakdown() {
-        String cacheKey = "spending-breakdown";
+    public Map<String, Object> getSpendingBreakdown(String accountNumber) {
+        String cacheKey = "spending-breakdown-account-" + accountNumber;
         Map<String, Object> cachedData = cacheService.getCachedData(cacheKey, Map.class);
 
         if (cachedData != null) {
             return cachedData;
         }
 
-        List<Transaction> transactions = transactionRepository.findAll();
+        // استدعاء المعاملات حسب رقم الحساب
+        List<Transaction> transactions = transactionRepository
+                .findBySourceAccount_AccountNumberOrTargetAccount_AccountNumber(accountNumber, accountNumber);
 
         Map<String, Double> spendingByType = transactions.stream()
                 .collect(Collectors.groupingBy(
@@ -47,21 +49,23 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         return result;
     }
 
+
     @Override
-    public Map<String, Object> getMonthlyTrends() {
-        String cacheKey = "monthly-trends";
+    public Map<String, Object> getMonthlyTrends(String accountNumber) {
+        String cacheKey = "monthly-trends-account-" + accountNumber;
         Map<String, Object> cachedData = cacheService.getCachedData(cacheKey, Map.class);
 
         if (cachedData != null) {
             return cachedData;
         }
 
-        List<Transaction> transactions = transactionRepository.findAll();
+        List<Transaction> transactions = transactionRepository
+                .findBySourceAccount_AccountNumberOrTargetAccount_AccountNumber(accountNumber, accountNumber);
 
         Map<String, Double> monthlyTotals = transactions.stream()
-                .filter(tx -> tx.getCreatedAt() != null)
+                .filter(tx -> tx.getTimestamp() != null)  // استخدم getTimestamp
                 .collect(Collectors.groupingBy(
-                        tx -> tx.getCreatedAt().getMonth()
+                        tx -> tx.getTimestamp().getMonth()
                                 .getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
                         TreeMap::new,
                         Collectors.summingDouble(tx -> tx.getAmount().doubleValue())
@@ -77,5 +81,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         return result;
     }
+
+
+
+
 
 }

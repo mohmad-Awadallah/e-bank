@@ -1,14 +1,11 @@
-// services/apiService.ts
-
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { Platform } from 'react-native';
-import { format } from 'date-fns';
 
-// Configure emulator hosts
+// تحديد المضيف المحلي للإيموليتر
 const LOCAL_HOST = Platform.select({
-    android: '10.0.2.2',    // Android emulator
-    ios: 'localhost',       // iOS simulator / macOS
-    default: 'localhost',   // Web or others
+    android: '10.0.2.2',
+    ios: 'localhost',
+    default: 'localhost',
 });
 
 const apiClient = axios.create({
@@ -21,7 +18,27 @@ const apiClient = axios.create({
     timeout: 10000,
 });
 
-// --- Interfaces ---
+// اعتراض الأخطاء العامة
+apiClient.interceptors.response.use(
+    (response: AxiosResponse) => response,
+    (error: AxiosError) => {
+        if (error.response?.status === 401) {
+            console.warn('Authentication error: Please log in again.');
+        }
+        return Promise.reject(error);
+    }
+)
+
+
+export interface User {
+    id: string
+    userId: string;
+    firstName: string;
+    lastName: string;
+    role?: string;
+};
+
+// --- الواجهات ---
 export interface Account {
     id: number;
     accountNumber: string;
@@ -33,17 +50,28 @@ export interface Account {
     status: 'ACTIVE' | 'INACTIVE' | 'CLOSED';
     active: boolean;
 }
+type TransactionType = 'TRANSFER' | 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'REVERSAL';
 
 export interface ApiTransaction {
     id: number;
     amount: number;
+    type: TransactionType;
     date: string;
     description: string;
-    type: string;
     sourceAccountNumber: string;
     targetAccountNumber: string;
     accountNumber: string;
     currency: string;
+}
+
+export interface TransactionDisplay {
+    id: string;
+    title: string;
+    category: string;
+    formattedDate: string;
+    displayAmount: string;
+    amount: number;
+    isCredit: boolean;
 }
 
 export interface SpendingData {
@@ -65,30 +93,9 @@ export interface RegisterCredentials {
     phoneNumber: string;
 }
 
-// Interface for mapped transaction display
-export interface TransactionDisplay {
-    id: string;
-    title: string;
-    displayAmount: string;
-    formattedDate: string;
-    category: string;
-    isCredit: boolean;
-}
-
-// Response interceptor for unified error handling
-apiClient.interceptors.response.use(
-    (response: AxiosResponse) => response,
-    (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            console.warn('Authentication error: Please log in again.');
-        }
-        return Promise.reject(error);
-    }
-);
-
-// API methods
+// --- واجهة API ---
 export const api = {
-    // Auth
+    // المصادقة
     register: (credentials: RegisterCredentials) =>
         apiClient.post('/auth/register', credentials),
 
@@ -97,20 +104,16 @@ export const api = {
 
     logout: () => apiClient.post('/auth/logout'),
 
-    // User
+    // المستخدم
     getCurrentUser: () => apiClient.get('/users/me'),
 
-    // Accounts
+    // الحسابات
     getUserAccounts: (userId: string, options?: { signal?: AbortSignal }) =>
-        apiClient.get(`/accounts/user/${userId}`, {
-            signal: options?.signal,
-        }),
+        apiClient.get(`/accounts/user/${userId}`, { signal: options?.signal }),
 
-    // Transactions
+    // المعاملات
     getUserTransactions: (userId: string, options?: { signal?: AbortSignal }) =>
-        apiClient.get(`/transactions/user/${userId}`, {
-            signal: options?.signal,
-        }),
+        apiClient.get(`/transactions/user/${userId}`, { signal: options?.signal }),
 
     getRecentTransactions: (
         accountNumber: string,
@@ -122,41 +125,23 @@ export const api = {
             { signal: options?.signal }
         ),
 
-    // Analytics
-    getSpendingData: (options?: { signal?: AbortSignal }): Promise<SpendingData> =>
+    // التحليلات
+    getSpendingData: (accountNumber: string, options?: { signal?: AbortSignal }) =>
         apiClient
-            .get('/analytics/spending', {
+            .get(`/analytics/spending`, {
+                params: { accountNumber },
                 signal: options?.signal,
             })
             .then(res => res.data as SpendingData),
 
-    getMonthlyTrendsData: (options?: { signal?: AbortSignal }): Promise<MonthlyTrendsData> =>
+    getMonthlyTrendsData: (accountNumber: string, options?: { signal?: AbortSignal }) =>
         apiClient
-            .get('/analytics/monthly', {
+            .get(`/analytics/monthly`, {
+                params: { accountNumber },
                 signal: options?.signal,
             })
             .then(res => res.data as MonthlyTrendsData),
-};
 
-export const mapApiTransactions = (transactions: ApiTransaction[]): TransactionDisplay[] => {
-    return transactions.map(tx => {
-        const isCredit = tx.targetAccountNumber === tx.accountNumber;
-        return {
-            id: tx.id.toString(),
-            title: tx.description,
-            displayAmount: `${isCredit ? '+' : '-'}${tx.currency}${tx.amount.toFixed(2)}`,
-            formattedDate: format(new Date(tx.date), 'MMM d, yyyy h:mm a'),
-            category: tx.type.charAt(0).toUpperCase() + tx.type.slice(1),
-            isCredit,
-        };
-    });
-};
-
-export const formatCurrency = (amount: number, currency: string): string => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency,
-    }).format(amount);
 };
 
 export default apiClient;

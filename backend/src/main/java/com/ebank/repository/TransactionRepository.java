@@ -34,4 +34,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             List<String> sourceAccountNumbers,
             List<String> targetAccountNumbers
     );
+
+    List<Transaction> findBySourceAccount_AccountNumberOrTargetAccount_AccountNumber(String sourceAccountNumber, String targetAccountNumber);
+
+
 }

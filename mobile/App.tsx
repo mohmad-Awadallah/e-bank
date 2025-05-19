@@ -12,6 +12,7 @@ import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import RegisterScreen from './screens/RegisterScreen';
+import TransactionsScreen from './screens/TransactionsScreen';
 
 import CustomSidebar from './components/CustomSidebar';
 import MobileHeader from './components/MobileHeader';
@@ -21,6 +22,7 @@ export type RootDrawerParamList = {
   Login: undefined;
   Dashboard: undefined;
   Register: undefined;
+  Transactions: undefined;
 };
 
 const Drawer = createDrawerNavigator<RootDrawerParamList>();
@@ -39,6 +41,11 @@ const AuthenticatedScreens = () => (
       name="Dashboard"
       component={DashboardScreen}
       options={{ title: 'Dashboard' }}
+    />
+    <Drawer.Screen
+      name="Transactions"
+      component={TransactionsScreen}
+      options={{ title: 'Transactions' }}
     />
   </>
 );

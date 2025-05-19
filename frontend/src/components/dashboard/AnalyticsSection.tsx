@@ -9,31 +9,21 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 // إضافة المكونات اللازمة لـ Chart.js
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, PointElement, LineElement);
 
-export function AnalyticsSection() {
-  // حالات لتخزين البيانات
+export function AnalyticsSection({ accountNumber }: { accountNumber: string }) {
   const [spendingData, setSpendingData] = useState<any>(null);
   const [monthlyData, setMonthlyData] = useState<any>(null);
 
-  // تحميل البيانات من الخادم عند تحميل المكون
   useEffect(() => {
-    // جلب بيانات تحليل الإنفاق
-    getSpendingData()
-      .then(data => {
-        setSpendingData(data);
-      })
-      .catch(error => {
-        console.error('Error fetching spending data:', error);
-      });
+    if (!accountNumber) return;
 
-    // جلب بيانات الاتجاهات الشهرية
-    getMonthlyTrendsData()
-      .then(data => {
-        setMonthlyData(data);
-      })
-      .catch(error => {
-        console.error('Error fetching monthly data:', error);
-      });
-  }, []);
+    getSpendingData(accountNumber)
+      .then(setSpendingData)
+      .catch(console.error);
+
+    getMonthlyTrendsData(accountNumber)
+      .then(setMonthlyData)
+      .catch(console.error);
+  }, [accountNumber]);
 
   if (!spendingData || !monthlyData) {
     return <LoadingScreen />;
