@@ -34,6 +34,8 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+
+
     @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserById(Long id) {
@@ -94,24 +96,30 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
+
     @Override
     public User updateUser(Long id, User userDetails) {
         return userRepository.findById(id)
                 .map(existingUser -> {
-                    if (userDetails.getFirstName() != null) {
-                        existingUser.setFirstName(userDetails.getFirstName());
+                    if (userDetails.getFirstName() != null) existingUser.setFirstName(userDetails.getFirstName());
+                    if (userDetails.getLastName()  != null) existingUser.setLastName(userDetails.getLastName());
+                    if (userDetails.getUsername()  != null) existingUser.setUsername(userDetails.getUsername());
+                    if (userDetails.getEmail()     != null) existingUser.setEmail(userDetails.getEmail());
+                    if (userDetails.getPassword()  != null && !userDetails.getPassword().isBlank()) {
+                        existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
                     }
-                    if (userDetails.getLastName() != null) {
-                        existingUser.setLastName(userDetails.getLastName());
-                    }
-                    if (userDetails.getPhoneNumber() != null) {
-                        existingUser.setPhoneNumber(userDetails.getPhoneNumber());
-                    }
+                    if (userDetails.getRole()      != null) existingUser.setRole(userDetails.getRole());
+                    existingUser.setEnabled(userDetails.isEnabled());
+                    if (userDetails.getPhoneNumber() != null) existingUser.setPhoneNumber(userDetails.getPhoneNumber());
+
                     evictUserCache(existingUser);
-                    return userRepository.save(existingUser);
+                    User saved = userRepository.save(existingUser);
+                    cacheService.cacheData("user:" + saved.getId(), saved, User.class);
+                    return saved;
                 })
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
+
 
     @Override
     public void deleteUser(Long id) {
@@ -131,14 +139,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void changePassword(Long userId, String newPassword) {
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
         userRepository.findById(userId)
                 .ifPresent(user -> {
-                    user.setPassword(passwordEncoder.encode(newPassword));
-                    evictUserCache(user);
-                    userRepository.save(user);
+                    if (passwordEncoder.matches(currentPassword, user.getPassword())) {
+                        user.setPassword(passwordEncoder.encode(newPassword));
+                        evictUserCache(user);
+                        userRepository.save(user);
+                    } else {
+                        throw new IllegalArgumentException("Current password is incorrect.");
+                    }
                 });
     }
+
 
     @Override
     public void toggleUserStatus(Long userId, boolean enabled) {

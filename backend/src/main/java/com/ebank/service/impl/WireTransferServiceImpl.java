@@ -1,5 +1,6 @@
 package com.ebank.service.impl;
 
+import com.ebank.dto.WireTransferResponseDTO;
 import com.ebank.exception.*;
 import com.ebank.model.account.Account;
 import com.ebank.model.account.AccountStatus;
@@ -29,9 +30,9 @@ public class WireTransferServiceImpl implements WireTransferService {
 
     @Override
     @Transactional
-    public WireTransfer initiateWireTransfer(Long senderAccountId, String recipientBankCode,
-                                             String recipientAccountNumber, String recipientName,
-                                             BigDecimal amount, String currency) {
+    public WireTransferResponseDTO initiateWireTransfer(Long senderAccountId, String recipientBankCode,
+                                                        String recipientAccountNumber, String recipientName,
+                                                        BigDecimal amount, String currency) {
         Account senderAccount = accountRepository.findById(senderAccountId)
                 .orElseThrow(() -> new AccountNotFoundException(senderAccountId));
 
@@ -51,18 +52,17 @@ public class WireTransferServiceImpl implements WireTransferService {
 
         WireTransfer savedTransfer = wireTransferRepository.save(transfer);
         log.info("Initiated wire transfer with reference: {}", savedTransfer.getReferenceNumber());
-        return savedTransfer;
+        return toDto(savedTransfer);
     }
 
     @Override
     @Transactional
-    public WireTransfer completeTransfer(String referenceNumber) {
+    public WireTransferResponseDTO completeTransfer(String referenceNumber) {
         WireTransfer transfer = wireTransferRepository.findByReferenceNumber(referenceNumber)
                 .orElseThrow(() -> new WireTransferNotFoundException(referenceNumber));
 
         validateTransferCompletion(transfer);
 
-        // خصم المبلغ من الحساب المرسل
         Account senderAccount = transfer.getSenderAccount();
         senderAccount.setBalance(senderAccount.getBalance().subtract(transfer.getAmount()));
         accountRepository.save(senderAccount);
@@ -70,14 +70,14 @@ public class WireTransferServiceImpl implements WireTransferService {
         transfer.setStatus(TransferStatus.COMPLETED);
         transfer.setCompletedAt(LocalDateTime.now());
 
-        WireTransfer updatedTransfer = wireTransferRepository.save(transfer);
+        WireTransfer updated = wireTransferRepository.save(transfer);
         log.info("Completed wire transfer: {}", referenceNumber);
-        return updatedTransfer;
+        return toDto(updated);
     }
 
     @Override
     @Transactional
-    public WireTransfer cancelTransfer(String referenceNumber) {
+    public WireTransferResponseDTO cancelTransfer(String referenceNumber) {
         WireTransfer transfer = wireTransferRepository.findByReferenceNumber(referenceNumber)
                 .orElseThrow(() -> new WireTransferNotFoundException(referenceNumber));
 
@@ -86,31 +86,34 @@ public class WireTransferServiceImpl implements WireTransferService {
         }
 
         transfer.setStatus(TransferStatus.CANCELED);
-        WireTransfer updatedTransfer = wireTransferRepository.save(transfer);
+        WireTransfer updated = wireTransferRepository.save(transfer);
         log.info("Canceled wire transfer: {}", referenceNumber);
-        return updatedTransfer;
+        return toDto(updated);
     }
 
     @Override
-    public Page<WireTransfer> getTransfersByAccount(String accountNumber, Pageable pageable) {
-        return wireTransferRepository.findBySenderAccount_AccountNumber(accountNumber, pageable);
+    public Page<WireTransferResponseDTO> getTransfersByAccount(String accountNumber, Pageable pageable) {
+        return wireTransferRepository.findBySenderAccount_AccountNumber(accountNumber, pageable)
+                .map(this::toDto);
     }
 
     @Override
-    public List<WireTransfer> getPendingTransfers() {
-        return wireTransferRepository.findByStatus(TransferStatus.PENDING);
+    public List<WireTransferResponseDTO> getPendingTransfers() {
+        return wireTransferRepository.findByStatus(TransferStatus.PENDING)
+                .stream().map(this::toDto).toList();
     }
 
     @Override
-    public WireTransfer getTransferByReference(String referenceNumber) {
-        return wireTransferRepository.findByReferenceNumber(referenceNumber)
+    public WireTransferResponseDTO getTransferByReference(String referenceNumber) {
+        WireTransfer transfer = wireTransferRepository.findByReferenceNumber(referenceNumber)
                 .orElseThrow(() -> new WireTransferNotFoundException(referenceNumber));
+        return toDto(transfer);
     }
 
-
     @Override
-    public List<WireTransfer> getTransfersByStatus(TransferStatus status) {
-        return wireTransferRepository.findByStatus(status);
+    public List<WireTransferResponseDTO> getTransfersByStatus(TransferStatus status) {
+        return wireTransferRepository.findByStatus(status)
+                .stream().map(this::toDto).toList();
     }
 
     private void validateTransfer(Account senderAccount, BigDecimal amount, String currency) {
@@ -139,5 +142,21 @@ public class WireTransferServiceImpl implements WireTransferService {
 
     private String generateReferenceNumber() {
         return "WT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private WireTransferResponseDTO toDto(WireTransfer wire) {
+        return WireTransferResponseDTO.builder()
+                .id(wire.getId())
+                .senderAccountNumber(wire.getSenderAccount().getAccountNumber())
+                .recipientBankCode(wire.getRecipientBankCode())
+                .recipientAccountNumber(wire.getRecipientAccountNumber())
+                .recipientName(wire.getRecipientName())
+                .amount(wire.getAmount())
+                .currency(wire.getCurrency())
+                .referenceNumber(wire.getReferenceNumber())
+                .status(wire.getStatus())
+                .initiatedAt(wire.getInitiatedAt())
+                .completedAt(wire.getCompletedAt())
+                .build();
     }
 }

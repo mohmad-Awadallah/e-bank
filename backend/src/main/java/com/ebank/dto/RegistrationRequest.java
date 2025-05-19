@@ -1,5 +1,6 @@
 package com.ebank.dto;
 
+import com.ebank.model.user.Role;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -22,6 +23,8 @@ public class RegistrationRequest {
 
     private String firstName;
     private String lastName;
+
+    private Role role;
 
     @Pattern(regexp = "^\\+?[0-9\\s-]+$", message = "Invalid phone number format")
     private String phoneNumber;

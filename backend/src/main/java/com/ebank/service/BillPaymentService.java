@@ -1,20 +1,31 @@
 package com.ebank.service;
 
+import com.ebank.dto.BillPaymentResponseDTO;
 import com.ebank.model.billPayment.BillPayment;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface BillPaymentService {
-    BillPayment processBillPayment(Long accountId, String billerCode,
-                                   String customerReference, BigDecimal amount);
+    BillPaymentResponseDTO processBillPayment(Long accountId,
+                                              String billerCode,
+                                              String customerReference,
+                                              BigDecimal amount);
 
-    List<BillPayment> getPaymentHistory(Long accountId);
 
-    BillPayment getPaymentByReceipt(String receiptNumber);
 
-    List<BillPayment> getPaymentsByBiller(String billerCode);
+    List<BillPaymentResponseDTO> getPaymentHistory(Long accountId);
 
-    BillPayment getPaymentById(Long id);
+
     void cancelPayment(Long id);
+
+
+    Optional<BillPaymentResponseDTO> getPaymentByReceipt(String receiptNumber);
+
+    List<BillPaymentResponseDTO> getPaymentsByBiller(String billerCode);
+
+    BillPaymentResponseDTO getPaymentDetailsById(Long id);
+
+
 }

@@ -14,6 +14,6 @@ public interface UserService {
     void deleteUser(Long id);
     boolean usernameExists(String username);
     boolean emailExists(String email);
-    void changePassword(Long userId, String newPassword);
+    void changePassword(Long userId, String currentPassword, String newPassword);
     void toggleUserStatus(Long userId, boolean enabled);
 }

@@ -43,6 +43,7 @@ public class SecurityLogServiceImpl implements SecurityLogService {
                 .deviceInfo(deviceInfo)
                 .timestamp(LocalDateTime.now())
                 .status(status)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         SecurityLog savedLog = securityLogRepository.save(securityLog);

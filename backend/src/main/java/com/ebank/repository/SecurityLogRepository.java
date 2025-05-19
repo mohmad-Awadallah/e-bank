@@ -16,4 +16,12 @@ public interface SecurityLogRepository extends JpaRepository<SecurityLog, Long> 
     int countByUser_IdAndStatusAndTimestampAfter(
             Long userId, LogStatus status, LocalDateTime timestamp);
     List<SecurityLog> findByIpAddressOrderByTimestampDesc(String ipAddress);
+    long countByActionAndCreatedAtBetween(String action, LocalDateTime start, LocalDateTime end);
+
+    long countByActionAndStatusAndCreatedAtBetween(
+            String action,
+            LogStatus status,
+            LocalDateTime start,
+            LocalDateTime end
+    );
 }

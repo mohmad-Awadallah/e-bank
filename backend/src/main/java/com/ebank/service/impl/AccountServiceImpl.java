@@ -3,7 +3,6 @@ package com.ebank.service.impl;
 import com.ebank.dto.*;
 import com.ebank.exception.*;
 import com.ebank.model.account.*;
-import com.ebank.model.user.Role;
 import com.ebank.model.user.User;
 import com.ebank.repository.AccountRepository;
 import com.ebank.repository.UserRepository;
@@ -12,6 +11,7 @@ import com.ebank.service.CacheService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeMap;
 import org.modelmapper.convention.MatchingStrategies;
@@ -40,6 +40,10 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public AccountDTO createAccount(AccountCreationDTO accountCreationDTO) {
+        if (accountRepository.existsByAccountNumber(accountCreationDTO.getAccountNumber())) {
+            throw new DuplicateAccountException("Account number already exists: " + accountCreationDTO.getAccountNumber());
+        }
+
         User user = userRepository.findById(accountCreationDTO.getUserId())
                 .orElseThrow(() -> new UserNotFoundException(accountCreationDTO.getUserId()));
 
@@ -49,10 +53,29 @@ public class AccountServiceImpl implements AccountService {
         account.setStatus(AccountStatus.ACTIVE);
 
         Account savedAccount = accountRepository.save(account);
-        log.info("Created new account with ID: {}", savedAccount.getId());
 
-        return modelMapper.map(savedAccount, AccountDTO.class);
+        AccountDTO savedDTO = modelMapper.map(savedAccount, AccountDTO.class);
+
+        savedDTO.setBalance(savedAccount.getBalance());
+        savedDTO.setAccountName(savedAccount.getAccountName());
+        savedDTO.setCurrency(savedAccount.getCurrency());
+        savedDTO.setAccountType(savedAccount.getAccountType());
+        savedDTO.setStatus(savedAccount.getStatus());
+
+        String userAccountsCacheKey = "user:accounts:" + user.getId();
+        cacheService.evictAccountCache(userAccountsCacheKey);
+
+        List<AccountDTO> updatedAccounts = accountRepository.findByUserId(user.getId())
+                .stream()
+                .map(acc -> modelMapper.map(acc, AccountDTO.class))
+                .collect(Collectors.toList());
+        cacheService.cacheData(userAccountsCacheKey, updatedAccounts, List.class);
+        cacheService.setExpiration(userAccountsCacheKey, 1, TimeUnit.HOURS);
+
+        return savedDTO;
     }
+
+
 
     @Override
     @Transactional(readOnly = true)
@@ -60,8 +83,12 @@ public class AccountServiceImpl implements AccountService {
         String cacheKey = "account:details:" + accountId;
         AccountDetailsDTO cached = cacheService.getCachedData(cacheKey, AccountDetailsDTO.class);
 
-        if (cached != null) return cached;
+        if (cached != null) {
+            log.debug("CACHE HIT for key {}", cacheKey);
+            return cached;
+        }
 
+        log.debug("CACHE MISS for key {}, loading from DB", cacheKey);
         Account account = getAccountById(accountId);
         AccountDetailsDTO dto = modelMapper.map(account, AccountDetailsDTO.class);
 
@@ -70,6 +97,7 @@ public class AccountServiceImpl implements AccountService {
 
         return dto;
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -119,12 +147,38 @@ public class AccountServiceImpl implements AccountService {
             throw new InvalidAmountException("Deposit amount must be positive");
         }
 
+        // 1. جلب الحساب وحساب الرصيد الجديد
         Account account = getAccountById(accountId);
-        account.setBalance(account.getBalance().add(amount));
-        accountRepository.save(account);
+        BigDecimal newBalance = account.getBalance().add(amount);
+        account.setBalance(newBalance);
+
+        // 2. حفظ التغيير في قاعدة البيانات
+        Account updated = accountRepository.save(account);
         log.info("Deposited {} to account ID: {}", amount, accountId);
-        evictAccountCache(account);
+
+        // 3. تحديث كاش الرصيد
+        String balanceKey = "account:balance:" + accountId;
+        cacheService.cacheData(balanceKey, newBalance, BigDecimal.class);
+        cacheService.setExpiration(balanceKey, 5, TimeUnit.MINUTES);
+
+        // 4. إعادة تعبئة كاش تفاصيل الحساب
+        String detailsKey = "account:details:" + accountId;
+        AccountDetailsDTO dto = modelMapper.map(updated, AccountDetailsDTO.class);
+        cacheService.cacheData(detailsKey, dto, AccountDetailsDTO.class);
+        cacheService.setExpiration(detailsKey, 30, TimeUnit.MINUTES);
+
+        // 5. **إعادة تعبئة** كاش قائمة حسابات المستخدم بالكامل
+        Long userId = account.getUser().getId();
+        String userAccountsKey = "user:accounts:" + userId;
+
+        List<AccountDTO> updatedAccounts = accountRepository.findByUserId(userId)
+                .stream()
+                .map(acc -> modelMapper.map(acc, AccountDTO.class))
+                .collect(Collectors.toList());
+        cacheService.cacheData(userAccountsKey, updatedAccounts, List.class);
+        cacheService.setExpiration(userAccountsKey, 1, TimeUnit.HOURS);
     }
+
 
     @Override
     public void withdraw(Long accountId, BigDecimal amount) {
@@ -139,10 +193,21 @@ public class AccountServiceImpl implements AccountService {
         }
 
         account.setBalance(account.getBalance().subtract(amount));
-        accountRepository.save(account);
+        Account updatedAccount = accountRepository.save(account);
         log.info("Withdrew {} from account ID: {}", amount, accountId);
+
+        String balanceKey = "account:balance:" + accountId;
+        cacheService.cacheData(balanceKey, updatedAccount.getBalance(), BigDecimal.class);
+        cacheService.setExpiration(balanceKey, 5, TimeUnit.MINUTES);
+
+        String detailsKey = "account:details:" + accountId;
+        AccountDetailsDTO updatedAccountDetails = modelMapper.map(updatedAccount, AccountDetailsDTO.class);
+        cacheService.cacheData(detailsKey, updatedAccountDetails, AccountDetailsDTO.class);
+        cacheService.setExpiration(detailsKey, 30, TimeUnit.MINUTES);
+
         evictAccountCache(account);
     }
+
 
     @Override
     public void transfer(Long sourceAccountId, Long targetAccountId, BigDecimal amount) {
@@ -198,6 +263,22 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public AccountDetailsDTO getAccountByNumber(String accountNumber) {
+        String cacheKey = "account:details:" + accountNumber;
+        AccountDetailsDTO cached = cacheService.getCachedData(cacheKey, AccountDetailsDTO.class);
+        if (cached != null) return cached;
+
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with number: " + accountNumber));
+
+        AccountDetailsDTO dto = modelMapper.map(account, AccountDetailsDTO.class);
+        cacheService.cacheData(cacheKey, dto, AccountDetailsDTO.class);
+        cacheService.setExpiration(cacheKey, 30, TimeUnit.MINUTES);
+        return dto;
+    }
+
+    @Override
     public void updateAccountDetails(Long accountId, AccountDTO accountDTO) {
         Account account = getAccountById(accountId);
         modelMapper.map(accountDTO, account);
@@ -207,8 +288,7 @@ public class AccountServiceImpl implements AccountService {
 
     private Account getAccountById(Long accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException(String.valueOf(accountId)));
-
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with ID: " + accountId));
     }
 
     @PostConstruct
@@ -217,24 +297,20 @@ public class AccountServiceImpl implements AccountService {
                 .setMatchingStrategy(MatchingStrategies.STRICT)
                 .setSkipNullEnabled(true);
 
-        // حل بديل أكثر أمانًا
-        TypeMap<User, UserDTO> typeMap = modelMapper.createTypeMap(User.class, UserDTO.class);
 
-        // تعيين الحقول الأساسية
-        typeMap.addMapping(User::getId, UserDTO::setId);
-        typeMap.addMapping(User::getUsername, UserDTO::setUsername);
-        typeMap.addMapping(User::getEmail, UserDTO::setEmail);
-        typeMap.addMapping(User::getFirstName, UserDTO::setFirstName);
-        typeMap.addMapping(User::getLastName, UserDTO::setLastName);
-        typeMap.addMapping(User::getPhoneNumber, UserDTO::setPhoneNumber);
-        typeMap.addMapping(User::isEnabled, UserDTO::setEnabled);
+        TypeMap<Account, AccountDetailsDTO> detailsMap =
+                modelMapper.createTypeMap(Account.class, AccountDetailsDTO.class);
 
-        // تعيين خاص للـ Role
-        typeMap.addMappings(mapper -> {
-            mapper.using(ctx -> ((Role) ctx.getSource()).name())
-                    .map(User::getRole, UserDTO::setRole);
-        });
+        detailsMap.addMapping(Account::getId,              AccountDetailsDTO::setId);
+        detailsMap.addMapping(Account::getAccountNumber,   AccountDetailsDTO::setAccountNumber);
+        detailsMap.addMapping(Account::getAccountName,     AccountDetailsDTO::setAccountName);
+        detailsMap.addMapping(Account::getCurrency,        AccountDetailsDTO::setCurrency);
+        detailsMap.addMapping(Account::getAccountType,     AccountDetailsDTO::setAccountType);
+        detailsMap.addMapping(Account::getStatus,          AccountDetailsDTO::setStatus);
+        detailsMap.addMapping(Account::getBalance,         AccountDetailsDTO::setBalance);
+
     }
+
 
     private void evictAccountCache(Account account) {
         cacheService.evictAccountCache("account:details:" + account.getId());

@@ -12,9 +12,13 @@ public class UserPrincipal implements UserDetails {
         this.user = user;
     }
 
-    // الدالة المطلوبة للحصول على ID المستخدم
     public Long getId() {
         return user.getId();
+    }
+
+
+    public User getUser() {
+        return user;
     }
 
     @Override
@@ -49,6 +53,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.isEnabled();
     }
 }

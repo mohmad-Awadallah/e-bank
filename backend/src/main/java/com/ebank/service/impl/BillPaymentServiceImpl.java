@@ -1,5 +1,7 @@
 package com.ebank.service.impl;
 
+import com.ebank.dto.BillPaymentCacheDTO;
+import com.ebank.dto.BillPaymentResponseDTO;
 import com.ebank.exception.BillPaymentException;
 import com.ebank.exception.InsufficientBalanceException;
 import com.ebank.model.account.Account;
@@ -17,7 +19,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,117 +33,125 @@ public class BillPaymentServiceImpl implements BillPaymentService {
 
     @Override
     @Transactional
-    public BillPayment processBillPayment(Long accountId, String billerCode,
-                                          String customerReference, BigDecimal amount) {
+    public BillPaymentResponseDTO processBillPayment(Long accountId,
+                                                     String billerCode,
+                                                     String customerReference,
+                                                     BigDecimal amount) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new BillPaymentException("Account not found"));
 
-        validatePayment(account, amount);
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientBalanceException(accountId, amount);
+        }
+        if (account.getStatus() != AccountStatus.ACTIVE) {
+            throw new BillPaymentException("Account is not active");
+        }
 
-        // Deduct amount from account
         account.setBalance(account.getBalance().subtract(amount));
         accountRepository.save(account);
 
-        // Create and save bill payment
         BillPayment payment = BillPayment.builder()
                 .payerAccount(account)
                 .billerCode(billerCode)
                 .customerReference(customerReference)
                 .amount(amount)
                 .paymentDate(LocalDateTime.now())
-                .paymentReceiptNumber(generateReceiptNumber())
+                .paymentReceiptNumber("RCPT-" + System.currentTimeMillis())
                 .build();
 
-        BillPayment savedPayment = billPaymentRepository.save(payment);
-        log.info("Processed bill payment with receipt: {}", savedPayment.getPaymentReceiptNumber());
-        cacheService.cacheData("bill:receipt:" + savedPayment.getPaymentReceiptNumber(), savedPayment, BillPayment.class);
+        BillPayment saved = billPaymentRepository.save(payment);
+        log.info("Processed bill payment with receipt: {}", saved.getPaymentReceiptNumber());
+
+        // Cache lightweight DTO
+        BillPaymentCacheDTO cacheDto = BillPaymentCacheDTO.builder()
+                .receiptNumber(saved.getPaymentReceiptNumber())
+                .payerAccountId(accountId)
+                .amount(saved.getAmount())
+                .paymentDate(saved.getPaymentDate())
+                .build();
+        cacheService.cacheData("bill:receipt:" + cacheDto.getReceiptNumber(),
+                cacheDto,
+                BillPaymentCacheDTO.class);
         cacheService.evictAccountCache("bill:history:" + accountId);
-        return savedPayment;
+
+        // Return response DTO
+        return BillPaymentResponseDTO.builder()
+                .receiptNumber(saved.getPaymentReceiptNumber())
+                .accountNumber(account.getAccountNumber())
+                .amount(saved.getAmount())
+                .paymentDate(saved.getPaymentDate())
+                .build();
+    }
+
+
+
+
+
+    @Override
+    public List<BillPaymentResponseDTO> getPaymentHistory(Long accountId) {
+        List<BillPayment> payments = billPaymentRepository
+                .findByPayerAccount_IdOrderByPaymentDateDesc(accountId);
+        return payments.stream()
+                .map(p -> BillPaymentResponseDTO.builder()
+                        .id(p.getId())
+                        .receiptNumber(p.getPaymentReceiptNumber())
+                        .accountNumber(p.getPayerAccount().getAccountNumber())
+                        .amount(p.getAmount())
+                        .paymentDate(p.getPaymentDate())
+                        .billerCode(p.getBillerCode())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+
+
+    @Override
+    public Optional<BillPaymentResponseDTO> getPaymentByReceipt(String receiptNumber) {
+        return billPaymentRepository.findByPaymentReceiptNumber(receiptNumber)
+                .map(p -> BillPaymentResponseDTO.builder()
+                        .receiptNumber(p.getPaymentReceiptNumber())
+                        .accountNumber(p.getPayerAccount().getAccountNumber())
+                        .amount(p.getAmount())
+                        .paymentDate(p.getPaymentDate())
+                        .build());
     }
 
     @Override
-    public List<BillPayment> getPaymentHistory(Long accountId) {
-        String cacheKey = "bill:history:" + accountId;
-        List<BillPayment> cached = cacheService.getCachedData(cacheKey, List.class);
-
-        if (cached != null) return cached;
-
-        List<BillPayment> payments = billPaymentRepository.findByPayerAccount_IdOrderByPaymentDateDesc(accountId);
-        cacheService.cacheData(cacheKey, payments, List.class);
-        cacheService.setExpiration(cacheKey, 1, TimeUnit.HOURS);
-
-        return payments;
-    }
-
-    @Override
-    public BillPayment getPaymentByReceipt(String receiptNumber) {
-        String cacheKey = "bill:receipt:" + receiptNumber;
-        BillPayment cached = cacheService.getCachedData(cacheKey, BillPayment.class);
-
-        if (cached != null) return cached;
-
-        BillPayment payment = billPaymentRepository.findByPaymentReceiptNumber(receiptNumber)
-                .orElseThrow(() -> new BillPaymentException("Payment not found"));
-        cacheService.cacheData(cacheKey, payment, BillPayment.class);
-
-        return payment;
-    }
-
-    @Override
-    public List<BillPayment> getPaymentsByBiller(String billerCode) {
-        String cacheKey = "bill:biller:" + billerCode;
-        List<BillPayment> cached = cacheService.getCachedData(cacheKey, List.class);
-
-        if (cached != null) return cached;
-
+    public List<BillPaymentResponseDTO> getPaymentsByBiller(String billerCode) {
         List<BillPayment> payments = billPaymentRepository.findByBillerCodeOrderByPaymentDateDesc(billerCode);
-        cacheService.cacheData(cacheKey, payments, List.class);
-        cacheService.setExpiration(cacheKey, 2, TimeUnit.HOURS);
-
-        return payments;
-    }
-
-    private void validatePayment(Account account, BigDecimal amount) {
-        if (account.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientBalanceException(account.getId(), amount);
-        }
-
-        if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new BillPaymentException("Account is not active");
-        }
-    }
-
-    private String generateReceiptNumber() {
-        return "RCPT-" + System.currentTimeMillis();
+        return payments.stream()
+                .map(p -> BillPaymentResponseDTO.builder()
+                        .receiptNumber(p.getPaymentReceiptNumber())
+                        .accountNumber(p.getPayerAccount().getAccountNumber())
+                        .amount(p.getAmount())
+                        .paymentDate(p.getPaymentDate())
+                        .billerCode(p.getBillerCode())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Override
-    public BillPayment getPaymentById(Long id) {
-        String cacheKey = "bill:payment:" + id;
-        BillPayment cached = cacheService.getCachedData(cacheKey, BillPayment.class);
-
-        if (cached != null) return cached;
-
-        BillPayment payment = billPaymentRepository.findById(id)
+    public BillPaymentResponseDTO getPaymentDetailsById(Long id) {
+        BillPayment p = billPaymentRepository.findById(id)
                 .orElseThrow(() -> new BillPaymentException("Payment not found"));
-        cacheService.cacheData(cacheKey, payment, BillPayment.class);
-
-        return payment;
+        return BillPaymentResponseDTO.builder()
+                .id(p.getId())
+                .receiptNumber(p.getPaymentReceiptNumber())
+                .accountNumber(p.getPayerAccount().getAccountNumber())
+                .amount(p.getAmount())
+                .paymentDate(p.getPaymentDate())
+                .billerCode(p.getBillerCode())
+                .build();
     }
+
+
 
     @Override
     @Transactional
     public void cancelPayment(Long id) {
-        BillPayment payment = getPaymentById(id);
-        cacheService.evictAccountCache("bill:receipt:" + payment.getPaymentReceiptNumber());
-        cacheService.evictAccountCache("bill:history:" + payment.getPayerAccount().getId());
-        if (payment.getPaymentDate().plusMinutes(15).isBefore(LocalDateTime.now())) {
-            throw new BillPaymentException("Cannot cancel payment after 15 minutes");
-        }
-        Account account = payment.getPayerAccount();
-        account.setBalance(account.getBalance().add(payment.getAmount()));
-        accountRepository.save(account);
-
-        billPaymentRepository.delete(payment);
+        BillPayment p = billPaymentRepository.findById(id)
+                .orElseThrow(() -> new BillPaymentException("Payment not found"));
+        billPaymentRepository.delete(p);
     }
+
 }

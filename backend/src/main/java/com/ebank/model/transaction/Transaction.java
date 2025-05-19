@@ -56,5 +56,10 @@ public class Transaction {
 
     @Size(max = 500, message = "Description must be less than 500 characters")
     private String description;
+
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
 }
 

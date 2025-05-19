@@ -67,10 +67,17 @@ public class DiscountCouponServiceImpl implements DiscountCouponService {
     @Transactional
     public void deactivateCoupon(String couponCode) {
         DiscountCoupon coupon = getCouponByCode(couponCode);
-        coupon.setExpiryDate(LocalDate.now().minusDays(1));
+
+        if (!coupon.isActive()) {
+            log.warn("Coupon {} is already deactivated.", couponCode);
+            return;
+        }
+
+        coupon.setActive(false);
         discountCouponRepository.save(coupon);
         log.info("Deactivated coupon: {}", couponCode);
     }
+
 
     @Override
     public DiscountCoupon getCouponByCode(String couponCode) {

@@ -1,6 +1,6 @@
 package com.ebank.controller;
 
-import com.ebank.model.billPayment.BillPayment;
+import com.ebank.dto.BillPaymentResponseDTO;
 import com.ebank.service.BillPaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,94 +21,63 @@ public class BillPaymentController {
 
     private final BillPaymentService billPaymentService;
 
-    @Operation(
-            summary = "Process new bill payment",
-            description = "Initiate a new bill payment transaction",
+    @Operation(summary = "Process new bill payment",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Payment processed successfully"),
-                    @ApiResponse(responseCode = "400", description = "Invalid input or insufficient balance"),
+                    @ApiResponse(responseCode = "201", description = "Payment processed"),
+                    @ApiResponse(responseCode = "400", description = "Invalid or insufficient balance"),
                     @ApiResponse(responseCode = "404", description = "Account not found")
-            }
-    )
+            })
     @PostMapping
-    public ResponseEntity<BillPayment> processPayment(
+    public ResponseEntity<BillPaymentResponseDTO> processPayment(
             @RequestParam Long accountId,
             @RequestParam String billerCode,
             @RequestParam String customerReference,
             @RequestParam BigDecimal amount
     ) {
-        BillPayment payment = billPaymentService.processBillPayment(
+        BillPaymentResponseDTO dto = billPaymentService.processBillPayment(
                 accountId, billerCode, customerReference, amount
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    @Operation(
-            summary = "Get payment history",
-            description = "Retrieve all payments for an account",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Payment history retrieved"),
-                    @ApiResponse(responseCode = "404", description = "Account not found")
-            }
-    )
+    @Operation(summary = "Get payment history for an account")
     @GetMapping("/account/{accountId}")
-    public ResponseEntity<List<BillPayment>> getPaymentHistory(
+    public ResponseEntity<List<BillPaymentResponseDTO>> getHistory(
             @PathVariable Long accountId
     ) {
         return ResponseEntity.ok(billPaymentService.getPaymentHistory(accountId));
     }
 
-    @Operation(
-            summary = "Get payment by receipt number",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Payment details retrieved"),
-                    @ApiResponse(responseCode = "404", description = "Payment not found")
-            }
-    )
+
+    @Operation(summary = "Get payment by receipt number")
     @GetMapping("/receipt/{receiptNumber}")
-    public ResponseEntity<BillPayment> getPaymentByReceipt(
-            @PathVariable String receiptNumber
-    ) {
-        return ResponseEntity.ok(billPaymentService.getPaymentByReceipt(receiptNumber));
+    public ResponseEntity<BillPaymentResponseDTO> getByReceipt(
+            @PathVariable String receiptNumber) {
+        return billPaymentService.getPaymentByReceipt(receiptNumber)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @Operation(
-            summary = "Get payments by biller",
-            description = "List all payments for specific biller",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Payments list retrieved"),
-                    @ApiResponse(responseCode = "404", description = "Biller not found")
-            }
-    )
+    @Operation(summary = "Get all payments by biller code")
     @GetMapping("/biller/{billerCode}")
-    public ResponseEntity<List<BillPayment>> getPaymentsByBiller(
-            @PathVariable String billerCode
-    ) {
+    public ResponseEntity<List<BillPaymentResponseDTO>> getByBiller(
+            @PathVariable String billerCode) {
         return ResponseEntity.ok(billPaymentService.getPaymentsByBiller(billerCode));
     }
 
-    @Operation(
-            summary = "Get payment details by ID",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Payment details retrieved"),
-                    @ApiResponse(responseCode = "404", description = "Payment not found")
-            }
-    )
+    @Operation(summary = "Get payment details by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<BillPayment> getPaymentById(@PathVariable Long id) {
-        return ResponseEntity.ok(billPaymentService.getPaymentById(id));
+    public ResponseEntity<BillPaymentResponseDTO> getById(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(billPaymentService.getPaymentDetailsById(id));
     }
 
-    @Operation(
-            summary = "Cancel pending payment",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Payment cancelled"),
-                    @ApiResponse(responseCode = "400", description = "Payment cannot be cancelled"),
-                    @ApiResponse(responseCode = "404", description = "Payment not found")
-            }
-    )
+
+    @Operation(summary = "Cancel a pending payment by ID")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelPayment(@PathVariable Long id) {
+    public ResponseEntity<Void> cancel(
+            @PathVariable Long id
+    ) {
         billPaymentService.cancelPayment(id);
         return ResponseEntity.ok().build();
     }

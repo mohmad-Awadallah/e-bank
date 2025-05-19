@@ -2,6 +2,7 @@ package com.ebank.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -45,6 +46,13 @@ public class JwtRefreshTokenFilter extends OncePerRequestFilter {
     }
 
     private String extractRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshtoken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
         String header = request.getHeader("X-Refresh-Token");
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7);

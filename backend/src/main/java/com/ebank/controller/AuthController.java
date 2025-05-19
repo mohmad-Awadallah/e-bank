@@ -4,8 +4,11 @@ import com.ebank.dto.ApiResponse;
 import com.ebank.dto.LoginRequest;
 import com.ebank.dto.RegistrationRequest;
 import com.ebank.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,8 +27,24 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> loginUser(
-            @RequestBody @Valid LoginRequest request) {
-        ApiResponse response = authService.loginUser(request);
-        return ResponseEntity.ok(response);
+            @RequestBody @Valid LoginRequest request,
+            HttpServletRequest httpRequest,  // إضافة هذا البارامتر
+            HttpServletResponse response
+    ) {
+        ApiResponse apiResponse = authService.loginUser(request, httpRequest, response);
+        return ResponseEntity.ok(apiResponse);
     }
+
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse> logoutUser(HttpServletResponse response) {
+        authService.logoutUser(response);
+        return ResponseEntity.ok(new ApiResponse(
+                true,
+                "Logout successful!",
+                HttpStatus.OK,
+                null
+        ));
+    }
+
 }

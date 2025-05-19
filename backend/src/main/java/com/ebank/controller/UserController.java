@@ -1,12 +1,15 @@
 package com.ebank.controller;
 
+import com.ebank.dto.PasswordChangeRequest;
 import com.ebank.model.user.User;
 import com.ebank.service.UserService;
+import com.ebank.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,13 +38,20 @@ public class UserController {
         if (userService.usernameExists(user.getUsername())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
-
         if (userService.emailExists(user.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already registered");
         }
-
         User newUser = userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+    }
+
+    @Operation(summary = "Get current authenticated user")
+    @GetMapping("/me")
+    public ResponseEntity<User> getCurrentUser(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        User user = userService.getUserById(principal.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(user);
     }
 
     @Operation(summary = "Get user by ID")
@@ -80,8 +90,8 @@ public class UserController {
 
     @Operation(summary = "Change user password")
     @PatchMapping("/{id}/change-password")
-    public ResponseEntity<String> changePassword(@PathVariable Long id, @RequestBody String newPassword) {
-        userService.changePassword(id, newPassword);
+    public ResponseEntity<String> changePassword(@PathVariable Long id, @RequestBody PasswordChangeRequest passwordChangeRequest) {
+        userService.changePassword(id, passwordChangeRequest.getCurrentPassword(), passwordChangeRequest.getNewPassword());
         return ResponseEntity.ok("Password updated successfully");
     }
 
@@ -108,4 +118,6 @@ public class UserController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return ResponseEntity.ok(user);
     }
+
+
 }

@@ -7,6 +7,7 @@ import com.ebank.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,7 +37,7 @@ public class AccountController {
             }
     )
     @PostMapping
-    public ResponseEntity<AccountDTO> createAccount(@RequestBody AccountCreationDTO accountCreationDTO) {
+    public ResponseEntity<AccountDTO> createAccount(@Valid @RequestBody AccountCreationDTO accountCreationDTO) {
         AccountDTO newAccount = accountService.createAccount(accountCreationDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(newAccount);
     }
@@ -163,5 +164,11 @@ public class AccountController {
     ) {
         accountService.updateAccountDetails(id, accountDTO);
         return ResponseEntity.ok(accountDTO);
+    }
+
+    @Operation(summary = "Get account by account number")
+    @GetMapping("/by-number/{accountNumber}")
+    public ResponseEntity<AccountDetailsDTO> getAccountByNumber(@PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.getAccountByNumber(accountNumber));
     }
 }

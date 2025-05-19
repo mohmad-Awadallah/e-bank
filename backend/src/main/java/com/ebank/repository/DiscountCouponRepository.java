@@ -10,4 +10,5 @@ import java.util.List;
 public interface DiscountCouponRepository extends JpaRepository<DiscountCoupon, String> {
     List<DiscountCoupon> findByExpiryDateAfter(LocalDate date);
     List<DiscountCoupon> findByDiscountType(DiscountType discountType);
+    long countByActive(boolean active);
 }

@@ -1,19 +1,22 @@
+// -------- SecurityConstants.java --------
 package com.ebank.config;
 
-public class SecurityConstants {
+public final class SecurityConstants {
 
-    // Headers
+    private SecurityConstants() { throw new IllegalStateException("Utility class"); }
+
+    // Header names
     public static final String TOKEN_HEADER = "Authorization";
     public static final String REFRESH_TOKEN_HEADER = "X-Refresh-Token";
     public static final String TOKEN_PREFIX = "Bearer ";
 
-    // CORS Configuration
-    public static final String[] ALLOWED_ORIGINS = {"https://frontend-domain.com"};
-    public static final String[] ALLOWED_METHODS = {"GET", "POST", "PUT", "DELETE", "OPTIONS"};
-    public static final String[] ALLOWED_HEADERS = {"Authorization", "Cache-Control", "Content-Type"};
-    public static final String[] EXPOSED_HEADERS = {REFRESH_TOKEN_HEADER};
+    // CORS
+    public static final String[] ALLOWED_ORIGINS = {"http://localhost:3000", "http://localhost:8081"};
+    public static final String[] ALLOWED_METHODS = {"GET","POST","PUT","DELETE","PATCH","OPTIONS"};
+    public static final String[] ALLOWED_HEADERS = { TOKEN_HEADER, "Content-Type", REFRESH_TOKEN_HEADER, "Cookie" };
+    public static final String[] EXPOSED_HEADERS = { TOKEN_HEADER, REFRESH_TOKEN_HEADER, "Set-Cookie" };
 
-    // Public endpoints
+    // Public URLs (no authentication required)
     public static final String[] PUBLIC_URLS = {
             "/api/auth/**",
             "/v3/api-docs/**",
@@ -22,87 +25,26 @@ public class SecurityConstants {
             "/webjars/**"
     };
 
-    // Roles
-    public static final String ROLE_PREFIX = "ROLE_";
+    // Roles (without ROLE_ prefix)
     public static final String ADMIN_ROLE = "ADMIN";
     public static final String USER_ROLE = "USER";
     public static final String AUDITOR_ROLE = "AUDITOR";
 
-    // Security settings
-    public static final int PASSWORD_STRENGTH = 12;
-
-    // ============== API Paths ==============
-    // Account Controller
-    public static final String ACCOUNT_BASE_URL = "/api/accounts";
-    public static final String[] ACCOUNT_API_PATHS = {
-            ACCOUNT_BASE_URL + "/**",
-            "/api/account/**"
-    };
-
-    // Transaction Controller
-    public static final String TRANSACTION_BASE_URL = "/api/transactions";
-    public static final String[] TRANSACTION_API_PATHS = {
-            TRANSACTION_BASE_URL + "/**",
-            "/api/transaction/**"
-    };
-
-    // Bill Payment Controller
-    public static final String BILL_PAYMENT_BASE_URL = "/api/bill-payments";
-    public static final String[] BILL_PAYMENT_API_PATHS = {
-            BILL_PAYMENT_BASE_URL + "/**",
-            "/api/bill/**"
-    };
-
-    // Credit Card Controller
-    public static final String CREDIT_CARD_BASE_URL = "/api/credit-cards";
-    public static final String[] CREDIT_CARD_API_PATHS = {
-            CREDIT_CARD_BASE_URL + "/**",
-            "/api/card/**"
-    };
-
-    // Wire Transfer Controller
-    public static final String WIRE_TRANSFER_BASE_URL = "/api/wire-transfers";
-    public static final String[] WIRE_TRANSFER_API_PATHS = {
-            WIRE_TRANSFER_BASE_URL + "/**",
-            "/api/wire/**"
-    };
-
-    // Digital Wallet Controller
-    public static final String DIGITAL_WALLET_BASE_URL = "/api/digital-wallets";
-    public static final String[] DIGITAL_WALLET_API_PATHS = {
-            DIGITAL_WALLET_BASE_URL + "/**",
-            "/api/wallet/**"
-    };
-
-    // Notification Controller
-    public static final String NOTIFICATION_BASE_URL = "/api/notifications";
-    public static final String[] NOTIFICATION_API_PATHS = {
-            NOTIFICATION_BASE_URL + "/**",
-            "/api/notify/**"
-    };
-
-    // Security Log Controller
-    public static final String SECURITY_LOG_BASE_URL = "/api/security-logs";
-    public static final String[] SECURITY_LOG_API_PATHS = {
-            SECURITY_LOG_BASE_URL + "/**",
-            "/api/logs/security/**"
-    };
-
-    // User Controller
+    // API Base Paths
+    public static final String ADMIN_BASE_URL = "/api/admin";
     public static final String USER_BASE_URL = "/api/users";
-    public static final String[] USER_API_PATHS = {
-            USER_BASE_URL + "/**",
-            "/api/user/**"
-    };
+    public static final String ACCOUNT_BASE_URL = "/accounts";
+    public static final String TRANSACTION_BASE_URL = "/transactions";
+    public static final String BILL_PAYMENT_BASE_URL = "/bill-payments";
+    public static final String CREDIT_CARD_BASE_URL = "/credit-cards";
+    public static final String WIRE_TRANSFER_BASE_URL = "/wire-transfers";
+    public static final String WALLET_BASE_URL = "/digital-wallets";
+    public static final String NOTIFICATION_BASE_URL = "/notifications";
+    public static final String SECURITY_LOG_BASE_URL = "/security-logs";
+    public static final String COUPON_BASE_URL = "/discount-coupons";
+    public static final String ANALYTICS_BASE_URL = "/analytics";
 
-    // Discount Coupon Controller
-    public static final String DISCOUNT_COUPON_BASE_URL = "/api/discount-coupons";
-    public static final String[] DISCOUNT_COUPON_API_PATHS = {
-            DISCOUNT_COUPON_BASE_URL + "/**",
-            "/api/coupon/**"
-    };
 
-    private SecurityConstants() {
-        throw new IllegalStateException("Utility class");
-    }
+    // Password settings
+    public static final int PASSWORD_STRENGTH = 12;
 }

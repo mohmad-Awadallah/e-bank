@@ -1,5 +1,6 @@
 package com.ebank.service;
 
+import com.ebank.dto.WireTransferResponseDTO;
 import com.ebank.model.wireTransfer.TransferStatus;
 import com.ebank.model.wireTransfer.WireTransfer;
 import org.springframework.data.domain.Page;
@@ -9,20 +10,21 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface WireTransferService {
-    WireTransfer initiateWireTransfer(Long senderAccountId, String recipientBankCode,
-                                      String recipientAccountNumber, String recipientName,
-                                      BigDecimal amount, String currency);
+    WireTransferResponseDTO initiateWireTransfer(Long senderAccountId, String recipientBankCode,
+                                                 String recipientAccountNumber, String recipientName,
+                                                 BigDecimal amount, String currency);
 
-    WireTransfer completeTransfer(String referenceNumber);
+    WireTransferResponseDTO completeTransfer(String referenceNumber);
 
-    WireTransfer cancelTransfer(String referenceNumber);
 
-    Page<WireTransfer> getTransfersByAccount(String accountNumber, Pageable pageable);
+    Page<WireTransferResponseDTO> getTransfersByAccount(String accountNumber, Pageable pageable);
 
-    List<WireTransfer> getPendingTransfers();
+    List<WireTransferResponseDTO> getPendingTransfers();
 
-    WireTransfer getTransferByReference(String referenceNumber);
+    WireTransferResponseDTO getTransferByReference(String referenceNumber);
 
-    List<WireTransfer> getTransfersByStatus(TransferStatus status);
+    List<WireTransferResponseDTO> getTransfersByStatus(TransferStatus status);
+
+    WireTransferResponseDTO cancelTransfer(String referenceNumber);
 
 }

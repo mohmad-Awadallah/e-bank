@@ -14,5 +14,6 @@ public interface TransactionService {
     public List<TransactionDTO> getRecentTransactions(String accountNumber, int count);
     public TransactionDTO reverseTransaction(Long transactionId);
     List<TransactionDTO> searchByReference(String reference);
+    List<TransactionDTO> getUserTransactions(Long userId);
 
 }

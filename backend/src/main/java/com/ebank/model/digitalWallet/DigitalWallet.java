@@ -8,18 +8,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "digital_wallets")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class DigitalWallet {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     @NotBlank
@@ -31,6 +35,9 @@ public class DigitalWallet {
     @NotBlank
     private String linkedPhoneNumber;
 
-    @Builder.Default
-    private Boolean isVerified = false;
+    private Boolean isVerified;
+
+    private String verificationCode;
+
+    private LocalDateTime verificationCodeExpiresAt;
 }

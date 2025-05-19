@@ -34,4 +34,6 @@ public interface AccountService {
 
     // إعدادات الحساب
     void updateAccountDetails(Long accountId, AccountDTO accountDTO);
+
+    AccountDetailsDTO getAccountByNumber(String accountNumber);
 }

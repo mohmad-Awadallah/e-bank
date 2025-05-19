@@ -102,4 +102,19 @@ public class TransactionController {
             @RequestParam String reference) {
         return ResponseEntity.ok(transactionService.searchByReference(reference));
     }
+
+    @Operation(
+            summary = "Get all transactions for a user",
+            description = "Retrieve all transactions related to any of the user's accounts",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User transactions retrieved"),
+                    @ApiResponse(responseCode = "404", description = "User or accounts not found")
+            }
+    )
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<TransactionDTO>> getUserTransactions(@PathVariable Long userId) {
+        List<TransactionDTO> transactions = transactionService.getUserTransactions(userId);
+        return ResponseEntity.ok(transactions);
+    }
+
 }

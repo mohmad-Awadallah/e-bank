@@ -4,8 +4,10 @@ import com.ebank.model.account.Account;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +16,8 @@ import java.time.LocalDateTime;
 @Table(name = "bill_payments")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BillPayment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

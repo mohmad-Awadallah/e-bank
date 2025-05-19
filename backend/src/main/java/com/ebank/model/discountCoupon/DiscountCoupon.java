@@ -3,8 +3,10 @@ package com.ebank.model.discountCoupon;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,6 +15,8 @@ import java.time.LocalDate;
 @Table(name = "discount_coupons")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DiscountCoupon {
     @Id
     @NotBlank
@@ -34,4 +38,6 @@ public class DiscountCoupon {
 
     @Builder.Default
     private Integer usedCount = 0;
+
+    private boolean active;
 }

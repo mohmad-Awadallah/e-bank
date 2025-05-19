@@ -1,5 +1,6 @@
 package com.ebank.service.impl;
 
+import com.ebank.dto.CreditCardResponseDTO;
 import com.ebank.exception.CreditCardException;
 import com.ebank.model.account.Account;
 import com.ebank.model.creditCard.CardType;
@@ -16,8 +17,10 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,14 +33,18 @@ public class CreditCardServiceImpl implements CreditCardService {
 
     @Override
     @Transactional
-    public CreditCard issueCreditCard(Long accountId, String cardHolderName,
-                                      CardType cardType, BigDecimal creditLimit) {
+    public CreditCardResponseDTO issueCreditCard(Long accountId,
+                                                 String cardHolderName,
+                                                 CardType cardType,
+                                                 BigDecimal creditLimit) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new CreditCardException("Account not found"));
 
-        validateCreditCardRequest(account, creditLimit);
+        if (creditLimit.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CreditCardException("Credit limit must be positive");
+        }
 
-        CreditCard creditCard = CreditCard.builder()
+        CreditCard card = CreditCard.builder()
                 .cardNumber(generateSecureCardNumber())
                 .cardHolderName(cardHolderName)
                 .expiryDate(LocalDate.now().plusYears(3))
@@ -49,132 +56,166 @@ public class CreditCardServiceImpl implements CreditCardService {
                 .availableBalance(creditLimit)
                 .build();
 
-        CreditCard savedCard = creditCardRepository.save(creditCard);
-        log.info("Issued new credit card: {} for account: {}", savedCard.getCardNumber(), accountId);
+        CreditCard saved = creditCardRepository.save(card);
+        log.info("Issued new credit card: {} for account: {}", saved.getCardNumber(), accountId);
+
         cacheService.evictAccountCache("account:active-cards:" + accountId);
-        return savedCard;
+
+        return toDto(saved);
     }
 
     @Override
     @Transactional
-    public CreditCard processPayment(Long cardId, BigDecimal amount) {
-        CreditCard creditCard = getActiveCreditCard(cardId);
+    public CreditCardResponseDTO processPayment(Long cardId,
+                                                BigDecimal amount) {
+        CreditCard card = getActiveCreditCard(cardId);
 
-        if (creditCard.getAvailableBalance().compareTo(amount) < 0) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CreditCardException("Amount must be positive");
+        }
+        if (card.getAvailableBalance().compareTo(amount) < 0) {
             throw new CreditCardException("Insufficient available credit");
         }
 
-        creditCard.setAvailableBalance(creditCard.getAvailableBalance().subtract(amount));
-        CreditCard updatedCard = creditCardRepository.save(creditCard);
-
+        card.setAvailableBalance(card.getAvailableBalance().subtract(amount));
+        CreditCard updated = creditCardRepository.save(card);
         log.info("Processed payment of {} for card: {}", amount, cardId);
-        return updatedCard;
+
+        evictCaches(updated);
+        return toDto(updated);
     }
 
     @Override
     @Transactional
-    public CreditCard updateCreditLimit(Long cardId, BigDecimal newLimit) {
-        CreditCard creditCard = getActiveCreditCard(cardId);
+    public CreditCardResponseDTO updateCreditLimit(Long cardId,
+                                                   BigDecimal newLimit) {
+        CreditCard card = getActiveCreditCard(cardId);
 
         if (newLimit.compareTo(BigDecimal.ZERO) <= 0) {
             throw new CreditCardException("Credit limit must be positive");
         }
 
-        BigDecimal difference = newLimit.subtract(creditCard.getCreditLimit());
-        creditCard.setCreditLimit(newLimit);
-        creditCard.setAvailableBalance(creditCard.getAvailableBalance().add(difference));
-
-        CreditCard updatedCard = creditCardRepository.save(creditCard);
+        BigDecimal diff = newLimit.subtract(card.getCreditLimit());
+        card.setCreditLimit(newLimit);
+        card.setAvailableBalance(card.getAvailableBalance().add(diff));
+        CreditCard updated = creditCardRepository.save(card);
         log.info("Updated credit limit to {} for card: {}", newLimit, cardId);
-        evictCardCache(updatedCard);
-        return updatedCard;
+
+        evictCaches(updated);
+        return toDto(updated);
     }
 
     @Override
     @Transactional
     public void deactivateCard(Long cardId) {
-        CreditCard creditCard = getCreditCardById(cardId);
-        creditCard.setIsActive(false);
-        creditCardRepository.save(creditCard);
+        CreditCard card = creditCardRepository.findById(cardId)
+                .orElseThrow(() -> new CreditCardException("Card not found"));
+
+        card.setIsActive(false);
+        creditCardRepository.save(card);
         log.info("Deactivated credit card: {}", cardId);
-        evictCardCache(creditCard);
+
+        evictCaches(card);
     }
 
     @Override
-    public CreditCard getCardDetails(Long cardId) {
-        String cacheKey = "credit-card:details:" + cardId;
-        CreditCard cached = cacheService.getCachedData(cacheKey, CreditCard.class);
-
+    public CreditCardResponseDTO getCardDetails(Long cardId) {
+        String key = "credit-card:details:" + cardId;
+        CreditCardResponseDTO cached = cacheService.getCachedData(key, CreditCardResponseDTO.class);
         if (cached != null) return cached;
 
-        CreditCard card = getCreditCardById(cardId);
-        cacheService.cacheData(cacheKey, card, CreditCard.class);
-        cacheService.setExpiration(cacheKey, 1, TimeUnit.HOURS);
+        CreditCard card = creditCardRepository.findById(cardId)
+                .orElseThrow(() -> new CreditCardException("Card not found"));
+        CreditCardResponseDTO dto = toDto(card);
+        cacheService.cacheData(key, dto, CreditCardResponseDTO.class);
+        cacheService.setExpiration(key, 1, TimeUnit.HOURS);
+        return dto;
+    }
+
+    @Override
+    public List<CreditCardResponseDTO> getCardsByAccount(Long accountId) {
+        return creditCardRepository.findByLinkedAccount_Id(accountId)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CreditCardResponseDTO> getActiveCardsByAccount(Long accountId) {
+        String key = "account:active-cards:" + accountId;
+        @SuppressWarnings("unchecked")
+        List<CreditCardResponseDTO> cached = cacheService.getCachedData(key, List.class);
+        if (cached != null) return cached;
+
+        List<CreditCardResponseDTO> dtos = creditCardRepository
+                .findByLinkedAccount_IdAndIsActiveTrue(accountId)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+
+        cacheService.cacheData(key, dtos, List.class);
+        cacheService.setExpiration(key, 2, TimeUnit.HOURS);
+        return dtos;
+    }
+
+    @Override
+    @Transactional
+    public CreditCardResponseDTO updateHolderName(Long cardId,
+                                                  String newName) {
+        CreditCard card = creditCardRepository.findById(cardId)
+                .orElseThrow(() -> new CreditCardException("Card not found"));
+        card.setCardHolderName(newName);
+        CreditCard updated = creditCardRepository.save(card);
+        log.info("Updated holder name for card: {}", cardId);
+
+        evictCaches(updated);
+        return toDto(updated);
+    }
+
+    // —————— Helpers ——————
+
+    private CreditCard getActiveCreditCard(Long cardId) {
+        CreditCard card = creditCardRepository.findById(cardId)
+                .orElseThrow(() -> new CreditCardException("Card not found"));
+        if (!card.getIsActive()) {
+            throw new CreditCardException("Card is not active");
+        }
         return card;
     }
 
-    @Override
-    public List<CreditCard> getCardsByAccount(Long accountId) {
-        return creditCardRepository.findByLinkedAccount_Id(accountId);
+    private void evictCaches(CreditCard card) {
+        cacheService.evictAccountCache("credit-card:details:" + card.getId());
+        cacheService.evictAccountCache("account:active-cards:" + card.getLinkedAccount().getId());
     }
 
-    @Override
-    public List<CreditCard> getActiveCardsByAccount(Long accountId) {
-        String cacheKey = "account:active-cards:" + accountId;
-        List<CreditCard> cached = cacheService.getCachedData(cacheKey, List.class);
-
-        if (cached != null) return cached;
-
-        List<CreditCard> cards = creditCardRepository.findByLinkedAccount_IdAndIsActiveTrue(accountId);
-        cacheService.cacheData(cacheKey, cards, List.class);
-        cacheService.setExpiration(cacheKey, 2, TimeUnit.HOURS);
-
-        return cards;
-    }
-
-    @Override
-    public CreditCard updateCard(CreditCard creditCard) {
-        CreditCard existingCard = getCreditCardById(creditCard.getId());
-        existingCard.setCardHolderName(creditCard.getCardHolderName());
-
-        return creditCardRepository.save(existingCard);
-    }
-
-    private CreditCard getCreditCardById(Long cardId) {
-        return creditCardRepository.findById(cardId)
-                .orElseThrow(() -> new CreditCardException("Credit card not found"));
-    }
-
-    private CreditCard getActiveCreditCard(Long cardId) {
-        CreditCard creditCard = getCreditCardById(cardId);
-        if (!creditCard.getIsActive()) {
-            throw new CreditCardException("Credit card is not active");
-        }
-        return creditCard;
-    }
-
-    private void validateCreditCardRequest(Account account, BigDecimal creditLimit) {
-        if (creditLimit.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new CreditCardException("Credit limit must be positive");
-        }
-
-        // Additional validation logic can be added here
+    private CreditCardResponseDTO toDto(CreditCard c) {
+        return CreditCardResponseDTO.builder()
+                .id(c.getId())
+                .cardNumber(c.getCardNumber())
+                .cardHolderName(c.getCardHolderName())
+                .expiryDate(c.getExpiryDate())
+                .cardType(c.getCardType().name())
+                .creditLimit(c.getCreditLimit())
+                .availableBalance(c.getAvailableBalance())
+                .accountId(c.getLinkedAccount().getId())
+                .isActive(c.getIsActive())
+                .build();
     }
 
     private String generateSecureCardNumber() {
-        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-        return uuid.substring(0, 4) + "-"
-                + uuid.substring(4, 8) + "-"
-                + uuid.substring(8, 12) + "-"
-                + uuid.substring(12, 16);
+        Random random = new Random();
+        StringBuilder cardNumber = new StringBuilder();
+        for (int i = 0; i < 16; i++) {
+            cardNumber.append(random.nextInt(10));
+        }
+        return cardNumber.substring(0, 4) + "-" +
+                cardNumber.substring(4, 8) + "-" +
+                cardNumber.substring(8, 12) + "-" +
+                cardNumber.substring(12, 16);
     }
+
 
     private int generateRandomCVV() {
-        return 100 + (int) (Math.random() * 900);
-    }
-
-    private void evictCardCache(CreditCard card) {
-        cacheService.evictAccountCache("credit-card:details:" + card.getId());
-        cacheService.evictAccountCache("account:active-cards:" + card.getLinkedAccount().getId());
+        return 100 + (int)(Math.random() * 900);
     }
 }

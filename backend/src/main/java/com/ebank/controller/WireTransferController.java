@@ -1,7 +1,7 @@
 package com.ebank.controller;
 
+import com.ebank.dto.WireTransferResponseDTO;
 import com.ebank.model.wireTransfer.TransferStatus;
-import com.ebank.model.wireTransfer.WireTransfer;
 import com.ebank.service.WireTransferService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -34,7 +34,7 @@ public class WireTransferController {
             }
     )
     @PostMapping
-    public ResponseEntity<WireTransfer> initiateTransfer(
+    public ResponseEntity<WireTransferResponseDTO> initiateTransfer(
             @RequestParam Long senderAccountId,
             @RequestParam String recipientBankCode,
             @RequestParam String recipientAccountNumber,
@@ -42,7 +42,7 @@ public class WireTransferController {
             @RequestParam BigDecimal amount,
             @RequestParam String currency
     ) {
-        WireTransfer transfer = wireTransferService.initiateWireTransfer(
+        WireTransferResponseDTO dto = wireTransferService.initiateWireTransfer(
                 senderAccountId,
                 recipientBankCode,
                 recipientAccountNumber,
@@ -50,7 +50,7 @@ public class WireTransferController {
                 amount,
                 currency
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(transfer);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @Operation(
@@ -62,7 +62,7 @@ public class WireTransferController {
             }
     )
     @PatchMapping("/{referenceNumber}/complete")
-    public ResponseEntity<WireTransfer> completeTransfer(
+    public ResponseEntity<WireTransferResponseDTO> completeTransfer(
             @PathVariable String referenceNumber
     ) {
         return ResponseEntity.ok(wireTransferService.completeTransfer(referenceNumber));
@@ -92,7 +92,7 @@ public class WireTransferController {
             }
     )
     @GetMapping("/account/{accountNumber}")
-    public ResponseEntity<Page<WireTransfer>> getAccountTransfers(
+    public ResponseEntity<Page<WireTransferResponseDTO>> getAccountTransfers(
             @PathVariable String accountNumber,
             Pageable pageable
     ) {
@@ -106,7 +106,7 @@ public class WireTransferController {
             }
     )
     @GetMapping("/pending")
-    public ResponseEntity<List<WireTransfer>> getPendingTransfers() {
+    public ResponseEntity<List<WireTransferResponseDTO>> getPendingTransfers() {
         return ResponseEntity.ok(wireTransferService.getPendingTransfers());
     }
 
@@ -118,7 +118,7 @@ public class WireTransferController {
             }
     )
     @GetMapping("/{referenceNumber}")
-    public ResponseEntity<WireTransfer> getTransferByReference(
+    public ResponseEntity<WireTransferResponseDTO> getTransferByReference(
             @PathVariable String referenceNumber
     ) {
         return ResponseEntity.ok(wireTransferService.getTransferByReference(referenceNumber));
@@ -131,7 +131,7 @@ public class WireTransferController {
             }
     )
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<WireTransfer>> getTransfersByStatus(
+    public ResponseEntity<List<WireTransferResponseDTO>> getTransfersByStatus(
             @PathVariable TransferStatus status
     ) {
         return ResponseEntity.ok(wireTransferService.getTransfersByStatus(status));
