@@ -41,8 +41,8 @@ Below are some screenshots from the web and mobile applications.
 
 
 
-```markdown
-![Web Dashboard Screenshot](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
+---
+![Screenshot](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
 ```
 
 ## 🛠️ Technology Stack
