@@ -1,5 +1,3 @@
-
-
 # e-Bank Application
 
 ![Project Architecture](https://img.shields.io/badge/architecture-multitier-blue)
@@ -37,23 +35,31 @@ e-bank/
 
 ## 📸 Screenshots & Project Images
 
-Below are some screenshots from the web and mobile applications. 
+Below are some screenshots from the web and mobile applications.
 
+![Dashboard Screenshot](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
 
+![Transfer Screen](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-52-15.png)
 
+![Account Details](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-47-51.png)
 
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-52-15.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-47-51.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-53-23.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-54-27.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-55-29.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-56-58.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-58-50.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-01-10.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-03-47.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-04-15.png)
-![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/fcce6525-7ae1-4114-aab5-2095a4d62534.jpeg)
+![Settings Screen](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-53-23.png)
+
+![Loan Application](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-54-27.png)
+
+![Notifications](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-55-29.png)
+
+![Analytics Dashboard](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-56-58.png)
+
+![User Profile](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-58-50.png)
+
+![Security Settings](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2001-01-10.png)
+
+![Support Chat](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2001-03-47.png)
+
+![Bill Payments](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2001-04-15.png)
+
+![Promo Banner](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/fcce6525-7ae1-4114-aab5-2095a4d62534.jpeg)
 
 ---
 
