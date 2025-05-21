@@ -6,7 +6,7 @@
 ![Mobile](https://img.shields.io/badge/mobile-react%20native-61dafb)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-A modern banking application with web and mobile interfaces، built with Spring Boot backend، Next.js frontend، and React Native mobile app.
+A modern banking application with web and mobile interfaces, built with Spring Boot backend, Next.js frontend, and React Native mobile app.
 
 ## 🌟 Key Features
 
@@ -18,6 +18,7 @@ A modern banking application with web and mobile interfaces، built with Spring 
 
 ## 📁 Project Structure
 
+```
 e-bank/
 ├── backend/          # Spring Boot backend (Java)
 │   ├── src/main/resources/application.yml # Config
@@ -26,18 +27,14 @@ e-bank/
 │   ├── public/      # Static assets
 │   ├── next.config.ts # Next.js config
 ├── mobile/          # React Native/Expo mobile app
-├── docs/
-│   └── images/      # Screenshots and project images
+├── images/      # Screenshots and project images  
 ├── docker-compose.yml # Docker configuration
 └── README.md        # Project documentation
-
+```
 
 ## 📸 Screenshots & Project Images
 
-Below are some screenshots from the web and mobile applications. 
-
-
-
+Below are some screenshots from the web and mobile applications.
 
 ![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
 ![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-52-15.png)
@@ -58,8 +55,8 @@ Below are some screenshots from the web and mobile applications.
 
 ### Backend
 
-* **Core**: Java 17+، Spring Boot 3.x
-* **Security**: Spring Security، JWT
+* **Core**: Java 17+, Spring Boot 3.x
+* **Security**: Spring Security, JWT
 * **Database**: MySQL with Hibernate
 * **Cache**: Redis
 * **API Docs**: OpenAPI 3 (Swagger)
@@ -93,9 +90,9 @@ Below are some screenshots from the web and mobile applications.
 
 ### 🐳 Docker Setup
 
-bash
+```bash
 docker-compose up -d --build
-
+```
 
 Services will be available at:
 
@@ -108,28 +105,28 @@ Services will be available at:
 
 #### Backend
 
-bash
+```bash
 cd backend
 ./mvnw clean install
 ./mvnw spring-boot:run
-
+```
 
 #### Frontend
 
-bash
+```bash
 cd frontend
 npm install
 npm run dev
 # Next.js will run on http://localhost:3000
-
+```
 
 #### Mobile
 
-bash
+```bash
 cd mobile
 npm install
 npx expo start --tunnel
-
+```
 
 ## 📚 API Documentation
 
