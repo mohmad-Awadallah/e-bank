@@ -104,7 +104,7 @@ npx expo start --tunnel
 ## 📚 API Documentation
 
 Access API docs after starting backend:
-- Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/api/swagger-ui/index.html#/)
+- Swagger UI: http://localhost:8080/swagger-ui/index.html#/
 - Next.js API Routes: http://localhost:3000
 
 
