@@ -42,7 +42,7 @@ Below are some screenshots from the web and mobile applications.
 
 
 ---
-![Screenshot](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
 ```
 
 ## 🛠️ Technology Stack
