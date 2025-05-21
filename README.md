@@ -41,9 +41,21 @@ Below are some screenshots from the web and mobile applications.
 
 
 
----
+
 ![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
-```
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-52-15.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-47-51.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-53-23.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-54-27.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-55-29.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-56-58.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-58-50.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-01-10.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-03-47.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-04-15.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/fcce6525-7ae1-4114-aab5-2095a4d62534.jpeg)
+
+---
 
 ## 🛠️ Technology Stack
 
