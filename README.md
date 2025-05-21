@@ -18,7 +18,6 @@ A modern banking application with web and mobile interfaces، built with Spring 
 
 ## 📁 Project Structure
 
-```
 e-bank/
 ├── backend/          # Spring Boot backend (Java)
 │   ├── src/main/resources/application.yml # Config
@@ -31,35 +30,27 @@ e-bank/
 │   └── images/      # Screenshots and project images
 ├── docker-compose.yml # Docker configuration
 └── README.md        # Project documentation
-```
+
 
 ## 📸 Screenshots & Project Images
 
-Below are some screenshots from the web and mobile applications.
+Below are some screenshots from the web and mobile applications. 
 
-![Dashboard Screenshot](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
 
-![Transfer Screen](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-52-15.png)
 
-![Account Details](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-47-51.png)
 
-![Settings Screen](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-53-23.png)
-
-![Loan Application](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-54-27.png)
-
-![Notifications](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-55-29.png)
-
-![Analytics Dashboard](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-56-58.png)
-
-![User Profile](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2000-58-50.png)
-
-![Security Settings](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2001-01-10.png)
-
-![Support Chat](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2001-03-47.png)
-
-![Bill Payments](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/Screenshot%20from%202025-05-22%2001-04-15.png)
-
-![Promo Banner](https://raw.githubusercontent.com/mohmad-Awadallah/e-bank/main/images/fcce6525-7ae1-4114-aab5-2095a4d62534.jpeg)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-51-46.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-52-15.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-47-51.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-53-23.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-54-27.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-55-29.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-56-58.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2000-58-50.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-01-10.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-03-47.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/Screenshot%20from%202025-05-22%2001-04-15.png)
+![Screenshot](https://github.com/mohmad-Awadallah/e-bank/blob/main/images/fcce6525-7ae1-4114-aab5-2095a4d62534.jpeg)
 
 ---
 
@@ -102,9 +93,9 @@ Below are some screenshots from the web and mobile applications.
 
 ### 🐳 Docker Setup
 
-```bash
+bash
 docker-compose up -d --build
-```
+
 
 Services will be available at:
 
@@ -117,28 +108,28 @@ Services will be available at:
 
 #### Backend
 
-```bash
+bash
 cd backend
 ./mvnw clean install
 ./mvnw spring-boot:run
-```
+
 
 #### Frontend
 
-```bash
+bash
 cd frontend
 npm install
 npm run dev
 # Next.js will run on http://localhost:3000
-```
+
 
 #### Mobile
 
-```bash
+bash
 cd mobile
 npm install
 npx expo start --tunnel
-```
+
 
 ## 📚 API Documentation
 
