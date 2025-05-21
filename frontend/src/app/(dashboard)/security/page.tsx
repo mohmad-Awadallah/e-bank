@@ -5,18 +5,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { getUserSecurityLogs } from "@/services/security";
+import { getUserSecurityLogs, SecurityLog } from "@/services/security";
 import { FaArrowLeft, FaArrowRight, FaCheckCircle, FaTimesCircle, FaShieldAlt, FaClock, FaDesktop, FaNetworkWired } from 'react-icons/fa';
 
-type SecurityLog = {
-    id: number;
-    message: string;
-    timestamp: string;
-    ipAddress: string;  // إضافة عنوان الـ IP
-    action: string;     // إضافة الإجراء
-    deviceInfo: string; // إضافة معلومات الجهاز
-    status: string;     // إضافة الحالة
-};
 
 export default function SecurityPage() {
     const { user } = useAuth();

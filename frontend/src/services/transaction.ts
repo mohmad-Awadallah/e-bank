@@ -22,4 +22,3 @@ export const makeTransfer = async (data: {
   const response = await apiClient.post('/transactions/transfer', data);
   return response.data;
 };
-1

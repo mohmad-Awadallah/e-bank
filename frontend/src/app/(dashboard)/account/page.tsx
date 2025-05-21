@@ -65,46 +65,7 @@ const AccountInfo = ({ account }: { account: Account }) => (
   </div>
 );
 
-const Transactions = ({
-  transactions,
-  currency,
-}: {
-  transactions: Account['transactions'];
-  currency: string;
-}) => {
-  if (!transactions || transactions.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow p-6 mb-6 text-center">
-        <p className="text-gray-600">No transactions available</p>
-      </div>
-    );
-  }
 
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-        <FiList /> Recent Transactions
-      </h2>
-      <div className="space-y-4">
-        {transactions.map((tx) => (
-          <div key={tx.id} className="border-b pb-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium">{tx.description}</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(tx.date).toLocaleString()}
-                </p>
-              </div>
-              <p className={`font-medium ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                {tx.amount.toLocaleString()} {currency}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 export default function AccountPage() {
   const { user, isAuthenticated } = useAuth();
@@ -139,7 +100,7 @@ export default function AccountPage() {
     if (isAuthenticated) fetchData();
   }, [user, isAuthenticated]);
 
-  
+
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
@@ -219,10 +180,6 @@ export default function AccountPage() {
         {account && (
           <>
             <AccountInfo account={account} />
-            <Transactions
-              transactions={account.transactions}
-              currency={account.currency}
-            />
             <div className="bg-white rounded-lg shadow p-6 mb-6">
               <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                 <FiDollarSign /> Deposit or Withdraw Funds

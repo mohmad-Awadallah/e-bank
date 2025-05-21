@@ -76,10 +76,22 @@ public class UserController {
             }
     )
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    public ResponseEntity<User> updateUser(
+            @PathVariable Long id,
+            @RequestBody User userDetails,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        boolean isAdmin = principal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!principal.getId().equals(id) && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         User updatedUser = userService.updateUser(id, userDetails);
         return ResponseEntity.ok(updatedUser);
     }
+
 
     @Operation(summary = "Delete user")
     @DeleteMapping("/{id}")
@@ -88,12 +100,23 @@ public class UserController {
         return ResponseEntity.ok("User deleted successfully");
     }
 
-    @Operation(summary = "Change user password")
     @PatchMapping("/{id}/change-password")
-    public ResponseEntity<String> changePassword(@PathVariable Long id, @RequestBody PasswordChangeRequest passwordChangeRequest) {
+    public ResponseEntity<String> changePassword(
+            @PathVariable Long id,
+            @RequestBody PasswordChangeRequest passwordChangeRequest,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        boolean isAdmin = principal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!principal.getId().equals(id) && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+
         userService.changePassword(id, passwordChangeRequest.getCurrentPassword(), passwordChangeRequest.getNewPassword());
         return ResponseEntity.ok("Password updated successfully");
     }
+
 
     @Operation(summary = "Toggle user status")
     @PatchMapping("/{id}/toggle-status")

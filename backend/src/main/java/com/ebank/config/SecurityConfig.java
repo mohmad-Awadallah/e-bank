@@ -79,7 +79,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/me").hasAnyRole(SecurityConstants.ADMIN_ROLE, SecurityConstants.USER_ROLE)
 
                         // Users
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*/change-password").authenticated()
                         .requestMatchers(SecurityConstants.USER_BASE_URL + "/**").hasAnyRole(SecurityConstants.ADMIN_ROLE)
+
 
                         // Accounts
                         .requestMatchers(SecurityConstants.ACCOUNT_BASE_URL + "/**").hasAnyRole(SecurityConstants.ADMIN_ROLE, SecurityConstants.USER_ROLE, SecurityConstants.AUDITOR_ROLE)

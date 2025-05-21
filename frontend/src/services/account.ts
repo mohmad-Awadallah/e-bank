@@ -1,7 +1,6 @@
 // services/account.ts
 
 import apiClient from '@/lib/apiClient';
-import { Account } from '@/types/auth';
 
 
 export const getUserAccounts = async (userId: string): Promise<Account[]> => {
@@ -24,6 +23,16 @@ export const getAccountDetails = async (accountId: string): Promise<Account> => 
     throw new Error('Failed to fetch account details');
   }
 };
+export interface Account {
+    id: number;
+    accountNumber: string;
+    balance: number;
+    currency: string;
+    accountType: 'CURRENT' | 'SAVINGS' | 'LOAN' | 'CREDIT';
+    accountName: string;
+    status: 'ACTIVE' | 'INACTIVE' | 'CLOSED';
+    active: boolean;
+}
 
 
 export interface AccountCreationInput {

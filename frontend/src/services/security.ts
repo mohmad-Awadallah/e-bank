@@ -3,7 +3,7 @@
 
 import apiClient from '@/lib/apiClient';
 
-type SecurityLog = {
+export type SecurityLog = {
     id: number;
     message: string;
     timestamp: string;

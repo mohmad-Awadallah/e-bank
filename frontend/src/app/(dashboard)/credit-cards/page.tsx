@@ -4,47 +4,65 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserAccounts } from '@/services/account';
+import { getUserAccounts, Account } from '@/services/account';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { getAccountCards, CreditCardResponseDTO } from '@/services/credit-cards';
 import {
-  FaCreditCard,
-  FaCcVisa,
-  FaCcMastercard,
-  FaCcAmex,
-  FaCcDiscover,
+    FaCreditCard,
+    FaCcVisa,
+    FaCcMastercard,
+    FaCcAmex,
+    FaCcDiscover,
 } from 'react-icons/fa';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 export default function CreditCardsPage() {
     const { user } = useAuth();
+    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [selectedAccountId, setSelectedAccountId] = useState<number | ''>('');
     const [cards, setCards] = useState<CreditCardResponseDTO[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loadingAccounts, setLoadingAccounts] = useState(true);
+    const [loadingCards, setLoadingCards] = useState(false);
 
+    // Load accounts on mount
     useEffect(() => {
-        const loadCardsForAllAccounts = async () => {
+        const loadAccounts = async () => {
             if (!user?.id) return;
             try {
-                const accounts = await getUserAccounts(user.id);
-                const allCards: CreditCardResponseDTO[] = [];
-
-                for (const acc of accounts) {
-                    const accCards = await getAccountCards(acc.id);
-                    allCards.push(...accCards);
+                const accs = await getUserAccounts(user.id);
+                setAccounts(accs);
+                // Select the first account by default if available
+                if (accs.length > 0) {
+                    setSelectedAccountId(accs[0].id);
                 }
+            } catch (err) {
+                console.error(err);
+                toast.error('Failed to load accounts');
+            } finally {
+                setLoadingAccounts(false);
+            }
+        };
+        loadAccounts();
+    }, [user]);
 
-                setCards(allCards);
+    // Load credit cards when selected account changes
+    useEffect(() => {
+        const loadCards = async () => {
+            if (selectedAccountId === '') return;
+            setLoadingCards(true);
+            try {
+                const accCards = await getAccountCards(selectedAccountId);
+                setCards(accCards);
             } catch (err) {
                 console.error(err);
                 toast.error('Failed to load cards');
             } finally {
-                setLoading(false);
+                setLoadingCards(false);
             }
         };
-
-        loadCardsForAllAccounts();
-    }, [user]);
+        loadCards();
+    }, [selectedAccountId]);
 
     const renderCardIcon = (type: string) => {
         switch (type) {
@@ -67,10 +85,34 @@ export default function CreditCardsPage() {
                 <FaCreditCard className="mr-2 text-blue-600" /> My Credit Cards
             </h1>
 
-            {loading ? (
+            {/* Account Selection */}
+            {loadingAccounts ? (
+                <LoadingScreen />
+            ) : (
+                <div className="mb-6">
+                    <label htmlFor="accountSelect" className="block mb-2 font-medium">
+                        Select Account:
+                    </label>
+                    <select
+                        id="accountSelect"
+                        value={selectedAccountId}
+                        onChange={e => setSelectedAccountId(Number(e.target.value))}
+                        className="w-full border rounded p-2"
+                    >
+                        {accounts.map(acc => (
+                            <option key={acc.id} value={acc.id}>
+                                {acc.accountNumber} — Balance: ${acc.balance.toFixed(2)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
+            {/* Credit Cards Display */}
+            {loadingCards ? (
                 <LoadingScreen />
             ) : cards.length === 0 ? (
-                <p>No credit cards found.</p>
+                <p className="text-center text-gray-600">No credit cards found for this account.</p>
             ) : (
                 <div className="space-y-4">
                     {cards.map(card => (

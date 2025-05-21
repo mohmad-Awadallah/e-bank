@@ -5,17 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c0bc4fc1-760c-43e4-a148-bf84f6e154b4" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/controller/AnalyticsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/controller/AnalyticsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/repository/TransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/repository/TransactionRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/service/AnalyticsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/service/AnalyticsService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/service/impl/AnalyticsServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/service/impl/AnalyticsServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend/target/classes/com/ebank/controller/AnalyticsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/target/classes/com/ebank/controller/AnalyticsController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend/target/classes/com/ebank/repository/TransactionRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/target/classes/com/ebank/repository/TransactionRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend/target/classes/com/ebank/service/AnalyticsService.class" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/target/classes/com/ebank/service/AnalyticsService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend/target/classes/com/ebank/service/impl/AnalyticsServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/target/classes/com/ebank/service/impl/AnalyticsServiceImpl.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/dashboard/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/components/dashboard/RecentTransactions.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/components/dashboard/RecentTransactions.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/services/analytics.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/services/analytics.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/service/impl/AccountServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/src/main/java/com/ebank/service/impl/AccountServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend/target/classes/com/ebank/config/SecurityConfig$JwtAccessDeniedHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/target/classes/com/ebank/config/SecurityConfig$JwtAccessDeniedHandler.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend/target/classes/com/ebank/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/target/classes/com/ebank/config/SecurityConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend/target/classes/com/ebank/controller/UserController.class" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/target/classes/com/ebank/controller/UserController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend/target/classes/com/ebank/service/impl/AccountServiceImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/../backend/target/classes/com/ebank/service/impl/AccountServiceImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/account/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/account/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/credit-cards/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/credit-cards/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/discount-coupons/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/discount-coupons/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/security/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/(dashboard)/security/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/services/account.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/services/account.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/services/credit-cards.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/services/credit-cards.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/services/security.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/services/security.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/services/transaction.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/services/transaction.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/App.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cesconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/cesconfig.json" afterDir="false" />
